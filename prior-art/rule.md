@@ -25,6 +25,7 @@ Do NOT search when the task is clearly project-specific (renaming a variable, fi
    - Official documentation or guides from the framework/language
    - Blog posts or articles describing battle-tested approaches
    - GitHub repositories with significant stars and recent activity
+   - YouTube tutorials and conference talks — especially useful for understanding architecture, seeing implementation walkthroughs, and learning from the library/framework author directly. Search with the `youtube-search` skill when the topic benefits from visual or step-by-step explanation.
 4. **In documentation** — check if the framework or language has a built-in way to do what you need. Many problems are solved by standard library functions that are easy to overlook.
 
 ### How to evaluate what you find
