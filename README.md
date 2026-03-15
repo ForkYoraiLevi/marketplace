@@ -14,6 +14,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [no-ai-credit](./no-ai-credit/) | Prevent AI agents from adding self-attribution to any output |
 | [prior-art](./prior-art/) | Search for existing solutions before building custom code |
 | [telegram-on-complete](./telegram-on-complete/) | Send a Telegram notification after completing any task |
+| [verify-your-work](./verify-your-work/) | Require agents to test and verify their work before declaring tasks complete |
 
 ### Skills
 
