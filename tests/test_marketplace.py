@@ -446,6 +446,79 @@ class TestRuleInstallGlobal(unittest.TestCase):
                     self.assertTrue(claude.exists(), f"{rule.name}: CLAUDE.md not created")
 
 
+class TestRuleInstallAgentsOnly(unittest.TestCase):
+    """--format agents installs only AGENTS.md, avoiding CLAUDE.md duplication."""
+
+    def test_agents_format_creates_only_agents(self):
+        """--format agents should create AGENTS.md but NOT CLAUDE.md or other formats."""
+        for rule in RULES:
+            path = rule / "install.sh"
+            if not path.exists():
+                continue
+            with self.subTest(rule=rule.name):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    result = subprocess.run(
+                        [str(path), "--format", "agents"],
+                        capture_output=True, text=True, timeout=10,
+                        cwd=tmpdir,
+                    )
+                    self.assertEqual(
+                        result.returncode, 0,
+                        f"{rule.name}: --format agents failed: {result.stderr}",
+                    )
+                    agents = Path(tmpdir) / "AGENTS.md"
+                    claude = Path(tmpdir) / "CLAUDE.md"
+                    windsurf = Path(tmpdir) / ".windsurf" / "rules" / f"{rule.name}.md"
+                    cursor = Path(tmpdir) / ".cursor" / "rules" / f"{rule.name}.md"
+                    self.assertTrue(agents.exists(), f"{rule.name}: AGENTS.md not created")
+                    self.assertFalse(claude.exists(), f"{rule.name}: CLAUDE.md should NOT be created for agents format")
+                    self.assertFalse(windsurf.exists(), f"{rule.name}: windsurf should NOT be created for agents format")
+                    self.assertFalse(cursor.exists(), f"{rule.name}: cursor should NOT be created for agents format")
+
+    def test_agents_format_global(self):
+        """--global --format agents should create only AGENTS.md globally."""
+        for rule in RULES:
+            path = rule / "install.sh"
+            if not path.exists():
+                continue
+            with self.subTest(rule=rule.name):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    env = os.environ.copy()
+                    env["HOME"] = tmpdir
+                    result = subprocess.run(
+                        [str(path), "--global", "--format", "agents"],
+                        capture_output=True, text=True, timeout=10,
+                        env=env,
+                    )
+                    self.assertEqual(
+                        result.returncode, 0,
+                        f"{rule.name}: --global --format agents failed: {result.stderr}",
+                    )
+                    agents = Path(tmpdir) / ".config" / "cognition" / "AGENTS.md"
+                    claude = Path(tmpdir) / ".claude" / "CLAUDE.md"
+                    self.assertTrue(agents.exists(), f"{rule.name}: AGENTS.md not created")
+                    self.assertFalse(claude.exists(), f"{rule.name}: CLAUDE.md should NOT be created for agents format")
+
+    def test_all_format_warns_about_duplication(self):
+        """--format all (default) should print a duplication warning."""
+        for rule in RULES:
+            path = rule / "install.sh"
+            if not path.exists():
+                continue
+            with self.subTest(rule=rule.name):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    result = subprocess.run(
+                        [str(path)],
+                        capture_output=True, text=True, timeout=10,
+                        cwd=tmpdir,
+                    )
+                    self.assertIn(
+                        "--format agents",
+                        result.stdout,
+                        f"{rule.name}: default install should warn about duplication",
+                    )
+
+
 # --------------------------------------------------------------------------- #
 # Test: Skill conventions
 # --------------------------------------------------------------------------- #

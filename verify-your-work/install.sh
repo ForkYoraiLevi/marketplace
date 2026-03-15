@@ -89,6 +89,13 @@ install_claude() {
     fi
 }
 
+# Warn about cross-tool duplication
+if [[ "$FORMAT" == "all" ]]; then
+    echo "Note: Some tools read both AGENTS.md and CLAUDE.md. If yours does,"
+    echo "      use --format agents to install only once and avoid duplication."
+    echo ""
+fi
+
 echo "Installing verify-your-work rule ($SCOPE, format: $FORMAT)"
 echo ""
 
