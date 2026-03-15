@@ -46,7 +46,7 @@ bash expose-port/scripts/expose-port.sh start PORT --bore SERVER_IP --secret SEC
 bash expose-port/scripts/expose-port.sh start PORT --bore SERVER_IP --bore-port 15432
 ```
 
-Returns an address like `SERVER_IP:PORT`. Works with any TCP protocol.
+Returns an address like `SERVER_IP:PORT` plus a clickable `http://SERVER_IP:PORT` URL. Works with any TCP protocol.
 
 If `BORE_SERVER` is set (via `~/.auth/bore` or env), the `--bore` flag is not needed:
 ```

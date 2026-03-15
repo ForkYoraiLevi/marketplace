@@ -180,6 +180,7 @@ _start_bore() {
 
     _record_tunnel "$tunnel_pid" "$port" "$remote_addr" "bore"
     echo "Exposed port ${port} at: ${remote_addr}"
+    echo "  URL: http://${remote_addr}"
     echo "Tunnel PID: ${tunnel_pid}"
     echo "Backend: bore (TCP — works with any protocol)"
 }
@@ -194,8 +195,12 @@ _list() {
         [[ -f "$f" ]] || continue
         read -r pid port url backend started < "$f"
         if kill -0 "$pid" 2>/dev/null; then
-            printf "  pid=%-8s port=%-6s %-10s url=%-45s started=%s\n" \
+            printf "  pid=%-8s port=%-6s %-10s %-45s started=%s\n" \
                 "$pid" "$port" "[${backend}]" "$url" "$started"
+            # Print clickable URL for bore tunnels (localhost.run URLs already have https://)
+            if [[ "$backend" == "bore" ]]; then
+                printf "  %43s http://%s\n" "" "$url"
+            fi
             found=1
         else
             rm -f "$f"
