@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
 """Search GitHub repositories for prior work and inspiration. Requires `gh` CLI."""
-
-from __future__ import annotations
 
 import argparse
 import json

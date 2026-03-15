@@ -67,7 +67,7 @@ Group them: lead with the top 2-3 picks (with brief reasoning), then list the re
 
 ### Step 4: Deep dive (if the user wants to go deeper)
 
-If the user asks to learn from a specific video, use the `youtube-wisdom` skill to fetch and analyze its transcript:
+If the user asks to learn from a specific video, use the `youtube-wisdom` skill to fetch and analyze its transcript (requires the **youtube-wisdom** skill to be installed):
 
 ```
 uv run youtube-wisdom/scripts/fetch_transcript.py "<video-url>"

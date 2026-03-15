@@ -17,6 +17,10 @@ triggers:
 
 Search DuckDuckGo from the command line and return clean, readable results.
 
+## Prerequisites
+
+The **web-scraper** skill must be installed alongside this skill (used in Step 3 to fetch full page content from search results).
+
 ## Usage
 
 ```

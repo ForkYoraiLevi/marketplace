@@ -8,6 +8,7 @@ allowed-tools:
 permissions:
   allow:
     - Exec(uv run)
+    - Exec(bash)
 triggers:
   - user
   - model

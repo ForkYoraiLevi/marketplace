@@ -1,6 +1,6 @@
 ---
 name: expose-port
-description: Expose a local port to a reachable address (HTTPS via localhost.run or any TCP via bore)
+description: Expose a local port via HTTPS (localhost.run) or TCP (bore)
 argument-hint: "<port> [--bore SERVER]"
 allowed-tools:
   - exec

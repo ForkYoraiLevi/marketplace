@@ -6,8 +6,6 @@
 # ///
 """Search DuckDuckGo and return results as structured text or JSON."""
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys

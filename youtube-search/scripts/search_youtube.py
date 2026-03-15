@@ -6,8 +6,6 @@
 # ///
 """Search YouTube for technical videos and tutorials via DuckDuckGo."""
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys
