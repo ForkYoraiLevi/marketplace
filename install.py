@@ -36,10 +36,22 @@ KEYS_CONFIRM = "(Enter: confirm, Esc: cancel)"
 
 def _add_escape_binding(question: questionary.Question) -> questionary.Question:
     """Patch a questionary Question so that Escape cancels (same as Ctrl+C)."""
+    kb = question.application.key_bindings
+    # confirm prompts use _MergedKeyBindings which lacks .add() —
+    # fall back to creating a fresh KeyBindings layer and merging it.
+    if hasattr(kb, "add"):
+        @kb.add(PtKeys.Escape, eager=True)
+        def _escape(event):
+            event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
+    else:
+        from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
+        extra = KeyBindings()
 
-    @question.application.key_bindings.add(PtKeys.Escape, eager=True)
-    def _escape(event):
-        event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
+        @extra.add(PtKeys.Escape, eager=True)
+        def _escape(event):
+            event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
+
+        question.application.key_bindings = merge_key_bindings([kb, extra])
 
     return question
 
