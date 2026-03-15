@@ -5,6 +5,16 @@ Expose a local port to a reachable address. Two backends:
 - **localhost.run** — free, no signup, public HTTPS URL via SSH. HTTP only.
 - **bore** — self-hosted TCP tunnel, any protocol (HTTP, SSH, databases, FTP, anything).
 
+## Quick start
+
+```bash
+# Run interactive setup (installs bore, configures server)
+bash expose-port/setup.sh
+
+# Expose a port
+bash expose-port/scripts/expose-port.sh start 8080
+```
+
 ## Usage
 
 Invoke as a skill:
