@@ -17,6 +17,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | Skill | Description |
 |-------|-------------|
 | [send-email](./send-email/) | Send emails via the Resend API |
+| [youtube-wisdom](./youtube-wisdom/) | Extract key knowledge from YouTube video transcripts |
 
 ## Installing Rules
 
