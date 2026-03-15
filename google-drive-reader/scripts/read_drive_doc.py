@@ -370,7 +370,7 @@ def print_doc(
     metadata: dict,
     urls: list[dict],
     conclusions: str | None,
-    full_text: str | None,
+    full_text: str,
     *,
     urls_only: bool,
     conclusions_only: bool,
@@ -392,8 +392,7 @@ def print_doc(
         else:
             out["references"] = urls
             out["conclusions"] = conclusions
-            if full_text is not None:
-                out["full_text"] = full_text
+            out["full_text"] = full_text
         print(json.dumps(out, indent=2, ensure_ascii=False))
         return
 
@@ -423,7 +422,7 @@ def print_doc(
             print("  No explicit conclusion section found in this document.")
         print()
 
-    if full_text is not None and not urls_only and not conclusions_only:
+    if not urls_only and not conclusions_only:
         print("## Full Text\n")
         print(full_text)
 
@@ -443,8 +442,6 @@ def main() -> None:
     parser.add_argument("--max-results", type=int, default=20, help="Max results for --list (default: 20)")
     parser.add_argument("--urls-only", action="store_true", help="Output only extracted URLs")
     parser.add_argument("--conclusions-only", action="store_true", help="Output only conclusions")
-    parser.add_argument("--full-text", action="store_true", default=True, help="Include full document text (default: on)")
-    parser.add_argument("--no-full-text", action="store_false", dest="full_text", help="Omit full document text")
     parser.add_argument("--json", action="store_true", dest="as_json", help="Output as JSON")
     parser.add_argument(
         "--output", "-o",
@@ -516,7 +513,7 @@ def main() -> None:
 
         urls = extract_urls(html, self_doc_id=doc_id)
         conclusions = extract_conclusions(html)
-        full_text = export_doc(service, doc_id, "text/plain") if args.full_text else None
+        full_text = export_doc(service, doc_id, "text/plain")
 
         print_doc(
             metadata,

@@ -66,8 +66,6 @@ uv run google-drive-reader/scripts/read_drive_doc.py "https://docs.google.com/do
 | `--max-results N`    | Max items when listing (default 20)             |
 | `--urls-only`        | Print only the extracted reference URLs         |
 | `--conclusions-only` | Print only the conclusions section              |
-| `--full-text`        | Include full document text (default: on)        |
-| `--no-full-text`     | Omit full document text from output             |
 | `--json`             | Output as JSON                                  |
 | `--output`, `-o`     | Save to file (auto-generates unique name if no path given) |
 | `--credentials FILE` | Path to credentials JSON (overrides env var)    |
