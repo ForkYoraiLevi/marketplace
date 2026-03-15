@@ -27,7 +27,7 @@ uv run duckduckgo-search/scripts/search.py <query> [options]
 
 | Flag | Description |
 |------|-------------|
-| `-n`, `--max-results N` | Maximum number of results (default: 5) |
+| `-n`, `--max-results N` | Maximum number of results (default: 20) |
 | `-r`, `--region CODE` | Region code, e.g. `us-en`, `uk-en`, `wt-wt` for global (default: `wt-wt`) |
 | `-t`, `--time {d,w,m,y}` | Time range: `d`=day, `w`=week, `m`=month, `y`=year |
 | `--json` | Output results as JSON |

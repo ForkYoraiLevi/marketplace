@@ -12,20 +12,23 @@ import argparse
 import json
 import sys
 import textwrap
+import time
+
+MAX_RETRIES = 3
+RETRY_DELAYS = [1, 3, 5]
 
 
-def search(
+def _fetch(
     query: str,
     *,
-    max_results: int = 5,
-    region: str = "wt-wt",
-    time_range: str | None = None,
-    output_json: bool = False,
-) -> str:
+    max_results: int,
+    region: str,
+    time_range: str | None,
+) -> list[dict]:
     from ddgs import DDGS
 
     ddgs = DDGS()
-    results = list(
+    return list(
         ddgs.text(
             query,
             region=region,
@@ -34,8 +37,44 @@ def search(
         )
     )
 
+
+def search(
+    query: str,
+    *,
+    max_results: int = 20,
+    region: str = "wt-wt",
+    time_range: str | None = None,
+    output_json: bool = False,
+) -> str:
+    results: list[dict] = []
+    last_error: Exception | None = None
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            results = _fetch(
+                query,
+                max_results=max_results,
+                region=region,
+                time_range=time_range,
+            )
+            if results:
+                break
+            # Empty results may be transient throttling — retry
+            if attempt < MAX_RETRIES - 1:
+                delay = RETRY_DELAYS[attempt]
+                print(f"No results (attempt {attempt + 1}/{MAX_RETRIES}), retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+        except Exception as e:
+            last_error = e
+            if attempt < MAX_RETRIES - 1:
+                delay = RETRY_DELAYS[attempt]
+                print(f"Error: {e} (attempt {attempt + 1}/{MAX_RETRIES}), retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+
     if not results:
-        return "No results found."
+        if last_error:
+            return f"Search failed after {MAX_RETRIES} attempts. Last error: {last_error}"
+        return "No results found after exhausting retries."
 
     if output_json:
         return json.dumps(results, indent=2, ensure_ascii=False)
@@ -60,8 +99,8 @@ def main() -> None:
     parser.add_argument(
         "-n", "--max-results",
         type=int,
-        default=5,
-        help="Maximum number of results (default: 5)",
+        default=20,
+        help="Maximum number of results (default: 20)",
     )
     parser.add_argument(
         "-r", "--region",
