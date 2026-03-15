@@ -12,6 +12,10 @@ import argparse
 import json
 import sys
 import textwrap
+import time
+
+MAX_RETRIES = 3
+RETRY_DELAYS = [1, 3, 5]
 
 
 def parse_duration(raw: str | None) -> int | None:
@@ -104,20 +108,42 @@ def technical_score(result: dict) -> float:
 def search_videos(
     query: str,
     *,
-    max_results: int = 10,
+    max_results: int = 15,
     region: str = "wt-wt",
     time_range: str | None = None,
 ) -> list[dict]:
     """Search for YouTube videos using DuckDuckGo video search."""
     from ddgs import DDGS
 
-    ddgs = DDGS()
-    raw = list(ddgs.videos(
-        f"{query} site:youtube.com",
-        region=region,
-        timelimit=time_range,
-        max_results=max_results * 3,  # fetch extra so we can filter/rank
-    ))
+    raw: list[dict] = []
+    last_error: Exception | None = None
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            ddgs = DDGS()
+            raw = list(ddgs.videos(
+                f"{query} site:youtube.com",
+                region=region,
+                timelimit=time_range,
+                max_results=max_results * 3,
+            ))
+            if raw:
+                break
+            if attempt < MAX_RETRIES - 1:
+                delay = RETRY_DELAYS[attempt]
+                print(f"No results (attempt {attempt + 1}/{MAX_RETRIES}), retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+        except Exception as e:
+            last_error = e
+            if attempt < MAX_RETRIES - 1:
+                delay = RETRY_DELAYS[attempt]
+                print(f"Error: {e} (attempt {attempt + 1}/{MAX_RETRIES}), retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+
+    if not raw:
+        if last_error:
+            raise last_error
+        return []
 
     # Keep only YouTube results
     videos = [
@@ -136,20 +162,42 @@ def search_videos(
 def search_text_fallback(
     query: str,
     *,
-    max_results: int = 10,
+    max_results: int = 15,
     region: str = "wt-wt",
     time_range: str | None = None,
 ) -> list[dict]:
     """Fallback: text search scoped to youtube.com."""
     from ddgs import DDGS
 
-    ddgs = DDGS()
-    raw = list(ddgs.text(
-        f"site:youtube.com {query}",
-        region=region,
-        timelimit=time_range,
-        max_results=max_results * 2,
-    ))
+    raw: list[dict] = []
+    last_error: Exception | None = None
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            ddgs = DDGS()
+            raw = list(ddgs.text(
+                f"site:youtube.com {query}",
+                region=region,
+                timelimit=time_range,
+                max_results=max_results * 2,
+            ))
+            if raw:
+                break
+            if attempt < MAX_RETRIES - 1:
+                delay = RETRY_DELAYS[attempt]
+                print(f"No results (attempt {attempt + 1}/{MAX_RETRIES}), retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+        except Exception as e:
+            last_error = e
+            if attempt < MAX_RETRIES - 1:
+                delay = RETRY_DELAYS[attempt]
+                print(f"Error: {e} (attempt {attempt + 1}/{MAX_RETRIES}), retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+
+    if not raw:
+        if last_error:
+            raise last_error
+        return []
 
     results = []
     for r in raw:
@@ -219,8 +267,8 @@ def main() -> None:
     parser.add_argument("query", nargs="+", help="Search query / topic")
     parser.add_argument(
         "-n", "--max-results",
-        type=int, default=10,
-        help="Maximum results to return (default: 10)",
+        type=int, default=15,
+        help="Maximum results to return (default: 15)",
     )
     parser.add_argument(
         "-r", "--region",

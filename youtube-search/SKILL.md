@@ -27,7 +27,7 @@ uv run youtube-search/scripts/search_youtube.py <query> [options]
 
 | Flag | Description |
 |------|-------------|
-| `-n`, `--max-results N` | Maximum results (default: 10) |
+| `-n`, `--max-results N` | Maximum results (default: 15) |
 | `-r`, `--region CODE` | Region code, e.g. `us-en`, `wt-wt` (default: `wt-wt`) |
 | `-t`, `--time {d,w,m,y}` | Time range: day, week, month, year |
 | `--json` | Output as JSON |
@@ -37,10 +37,10 @@ uv run youtube-search/scripts/search_youtube.py <query> [options]
 
 ### Step 1: Search wide
 
-Run the search with `-n 15` to get a broad set of results:
+Run the search with the user's topic:
 
 ```
-uv run youtube-search/scripts/search_youtube.py <query> -n 15
+uv run youtube-search/scripts/search_youtube.py <query>
 ```
 
 ### Step 2: Triage — pick which videos to recommend

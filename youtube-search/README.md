@@ -40,7 +40,7 @@ uv run youtube-search/scripts/search_youtube.py "WebAssembly" --scores
 
 | Flag | Description |
 |------|-------------|
-| `-n`, `--max-results N` | Maximum number of results (default: 10) |
+| `-n`, `--max-results N` | Maximum number of results (default: 15) |
 | `-r`, `--region CODE` | Region code, e.g. `us-en`, `uk-en`, `wt-wt` for global (default: `wt-wt`) |
 | `-t`, `--time {d,w,m,y}` | Time range: `d`=day, `w`=week, `m`=month, `y`=year |
 | `--json` | Output results as JSON |
