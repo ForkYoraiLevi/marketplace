@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import textwrap
 
@@ -31,15 +30,11 @@ def parse_duration(raw: str | None) -> int | None:
     return None
 
 
-def fmt_duration(seconds: int | None) -> str:
-    """Format seconds into a human-readable duration."""
-    if seconds is None:
-        return "?"
-    h, m = divmod(seconds, 3600)
-    m, s = divmod(m, 60)
-    if h:
-        return f"{h}:{m:02d}:{s:02d}"
-    return f"{m}:{s:02d}"
+def fmt_published(raw: str | None) -> str:
+    """Extract just the date from an ISO timestamp like '2026-01-27T14:39:28.0000000'."""
+    if not raw:
+        return ""
+    return raw.split("T")[0]
 
 
 def technical_score(result: dict) -> float:
@@ -102,6 +97,21 @@ def technical_score(result: dict) -> float:
             score += 2.0
             break
 
+    # Boost videos with high view counts (battle-tested content)
+    stats = result.get("statistics") or {}
+    views = stats.get("viewCount")
+    if views is not None:
+        try:
+            views = int(views)
+        except (ValueError, TypeError):
+            views = 0
+        if views >= 500_000:
+            score += 2.0
+        elif views >= 100_000:
+            score += 1.5
+        elif views >= 10_000:
+            score += 1.0
+
     return score
 
 
@@ -149,7 +159,7 @@ def search_text_fallback(
 
     ddgs = DDGS()
     raw = list(ddgs.text(
-        f"site:youtube.com {query} tutorial",
+        f"site:youtube.com {query}",
         region=region,
         timelimit=time_range,
         max_results=max_results * 2,
@@ -188,7 +198,7 @@ def format_results(videos: list[dict], *, show_scores: bool = False) -> str:
         desc = v.get("description", v.get("body", ""))
         uploader = v.get("uploader", "")
         duration = v.get("duration", "")
-        published = v.get("published", "")
+        published = fmt_published(v.get("published", ""))
 
         meta_parts = []
         if duration:
