@@ -75,6 +75,13 @@ uv run tests/test_marketplace.py -k rule  # only rule tests
 
 The test suite checks: directory structure, YAML frontmatter, catalog consistency, PEP 723 metadata, shell script safety, install script behavior (--help, --global, idempotency), format file content parity, and secret scanning. Always run the tests before submitting changes.
 
+Run the CI workflow locally with [act](https://github.com/nektos/act) and podman:
+
+```
+./tests/run-ci-local.sh          # run the full GitHub Actions workflow locally
+./tests/run-ci-local.sh -n       # dry-run (no container)
+```
+
 ## Verify Your Work
 
 When building new capabilities — skills, tools, scripts, integrations, or any functional artifact — you MUST verify that what you produce actually works before declaring the task complete. Do not assume correctness. Prove it.
