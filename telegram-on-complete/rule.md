@@ -32,4 +32,6 @@ Keep it under 600 characters for simple tasks, up to 1500 for complex ones. Ever
 - ALWAYS after completing a task the user asked you to do
 - ALWAYS after a long-running operation finishes (build, deploy, migration, etc.)
 - ALWAYS when a task fails and you cannot recover — explain what went wrong
-- Do NOT notify for trivial follow-up questions, clarifications, or mid-task status updates
+- ALWAYS when you are blocked and need user input — tell them what you need so they know to come back
+- ALWAYS when you pause to ask a question or present options — the user may not be watching the terminal
+- Do NOT notify for mid-task progress updates where you are still actively working and not waiting on the user
