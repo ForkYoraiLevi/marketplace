@@ -89,7 +89,7 @@ def main() -> None:
     existing_chat_id = os.environ.get("TELEGRAM_CHAT_ID")
 
     if existing_token and existing_chat_id:
-        print(f"  Found existing config:")
+        print("  Found existing config:")
         print(f"    TELEGRAM_BOT_TOKEN = {existing_token[:12]}...")
         print(f"    TELEGRAM_CHAT_ID   = {existing_chat_id}")
         if not prompt_yes_no("\n  Reconfigure from scratch?", default=False):
@@ -130,10 +130,10 @@ def main() -> None:
         me = api_call(token, "getMe")
         bot_name = me["result"]["first_name"]
         bot_username = me["result"].get("username", "unknown")
-        print(f"OK")
+        print("OK")
         print(f"  Bot: {bot_name} (@{bot_username})")
     except Exception as e:
-        print(f"FAILED")
+        print("FAILED")
         print(f"\n  Could not validate token: {e}", file=sys.stderr)
         print("  Double-check the token from @BotFather and try again.", file=sys.stderr)
         sys.exit(1)
@@ -197,7 +197,7 @@ def main() -> None:
 
         if not chat_id:
             print("\n  Could not detect a chat ID automatically.")
-            print(f"  You can find it manually by visiting:")
+            print("  You can find it manually by visiting:")
             print(f"    https://api.telegram.org/bot{token}/getUpdates")
             print("  Look for \"chat\":{\"id\": NUMBER} in the response.\n")
             chat_id = prompt("  Enter your chat ID manually")
@@ -232,7 +232,7 @@ def main() -> None:
         if prompt_yes_no(f"  Append to {profile.name}?"):
             try:
                 with open(profile, "a") as f:
-                    f.write(f"\n# telegram-notify\n")
+                    f.write("\n# telegram-notify\n")
                     f.write(export_lines)
                 print(f"\n  Written to {profile}.")
                 print(f"  Run: source {profile}")
@@ -273,11 +273,11 @@ def _send_test(token: str, chat_id: str) -> None:
             desc = json.loads(body).get("description", body)
         except json.JSONDecodeError:
             desc = body
-        print(f"FAILED")
+        print("FAILED")
         print(f"\n  API error: {desc}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        print(f"FAILED")
+        print("FAILED")
         print(f"\n  Error: {e}", file=sys.stderr)
         sys.exit(1)
 

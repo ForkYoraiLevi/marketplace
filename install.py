@@ -15,11 +15,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 from pathlib import Path
-from textwrap import dedent
 
 import questionary
 from prompt_toolkit.keys import Keys as PtKeys
@@ -391,7 +389,6 @@ def build_choices(items: list[dict], installed_check, *, install_mode: bool) -> 
     choices = []
     for item in items:
         is_inst = installed_check(item)
-        marker = " [green]\u2713[/green]" if is_inst else ""
         label = f"{item['name']:<25s} {item['description'][:50]}"
         if install_mode:
             choices.append(questionary.Choice(label, value=item["name"], checked=not is_inst))
@@ -498,7 +495,6 @@ def main():
     # ── Skills ──
     console.print(f"\n[bold {mode_color}]Skills[/bold {mode_color}] [dim](on-demand /skill-name commands)[/dim]")
     skill_choices_list = []
-    primary_skills_dir = primary_paths.get("skills")
     for s in skills:
         is_inst = is_skill_installed(s["name"], primary_paths)
         marker = "\u2713 " if is_inst else "  "
