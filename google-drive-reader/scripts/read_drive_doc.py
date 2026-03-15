@@ -443,7 +443,8 @@ def main() -> None:
     parser.add_argument("--max-results", type=int, default=20, help="Max results for --list (default: 20)")
     parser.add_argument("--urls-only", action="store_true", help="Output only extracted URLs")
     parser.add_argument("--conclusions-only", action="store_true", help="Output only conclusions")
-    parser.add_argument("--full-text", action="store_true", help="Include full document text")
+    parser.add_argument("--full-text", action="store_true", default=True, help="Include full document text (default: on)")
+    parser.add_argument("--no-full-text", action="store_false", dest="full_text", help="Omit full document text")
     parser.add_argument("--json", action="store_true", dest="as_json", help="Output as JSON")
     parser.add_argument(
         "--output", "-o",
