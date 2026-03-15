@@ -21,6 +21,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 |-------|-------------|
 | [duckduckgo-search](./duckduckgo-search/) | Search DuckDuckGo and return results as structured text |
 | [expose-port](./expose-port/) | Expose a local port via HTTPS (localhost.run) or TCP tunnel (bore) |
+| [github-search](./github-search/) | Search GitHub for repositories, prior art, and implementation inspiration |
 | [google-drive-reader](./google-drive-reader/) | Read Google Docs from personal Drive, extract URLs and conclusions |
 | [send-email](./send-email/) | Send emails via the Resend API |
 | [ssh-tunnel](./ssh-tunnel/) | Set up SSH port forwarding tunnels (local, remote, SOCKS) |
