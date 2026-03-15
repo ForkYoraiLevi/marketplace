@@ -16,7 +16,9 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 
 | Skill | Description |
 |-------|-------------|
+| [google-drive-reader](./google-drive-reader/) | Read Google Docs from personal Drive, extract URLs and conclusions |
 | [send-email](./send-email/) | Send emails via the Resend API |
+| [web-scraper](./web-scraper/) | Fetch web pages and extract clean content (with Reddit support) |
 | [youtube-wisdom](./youtube-wisdom/) | Extract key knowledge from YouTube video transcripts |
 
 ## Installing Rules
