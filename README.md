@@ -10,6 +10,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 
 | Rule | Description |
 |------|-------------|
+| [blast-radius](./blast-radius/) | Scope changes by blast radius — prefer small atomic edits over large risky rewrites |
 | [continuous-improvement](./continuous-improvement/) | Structured seven-phase workflow for finding, planning, and implementing codebase improvements |
 | [no-ai-credit](./no-ai-credit/) | Prevent AI agents from adding self-attribution to any output |
 | [prior-art](./prior-art/) | Search for existing solutions before building custom code |
@@ -27,6 +28,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [google-drive-reader](./google-drive-reader/) | Read Google Docs from personal Drive, extract URLs and conclusions |
 | [send-email](./send-email/) | Send an email to someone using the Resend API |
 | [ssh-tunnel](./ssh-tunnel/) | Set up SSH port forwarding tunnels (local, remote, SOCKS proxy) |
+| [structured-handoff](./structured-handoff/) | Generate structured task files for autonomous agent sessions |
 | [telegram-notify](./telegram-notify/) | Send a Telegram notification with a task summary |
 | [web-scraper](./web-scraper/) | Fetch a web page and extract its main content as clean readable text |
 | [youtube-search](./youtube-search/) | Search YouTube for technical videos, tutorials, and talks on a topic |
