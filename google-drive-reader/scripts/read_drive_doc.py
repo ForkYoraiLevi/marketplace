@@ -83,7 +83,8 @@ def get_credentials(credentials_file: str) -> object:
                 print(f"Error: Credentials file not found: {credentials_file}", file=sys.stderr)
                 print(
                     "Download OAuth2 client credentials JSON from Google Cloud Console\n"
-                    "and set GOOGLE_CREDENTIALS_FILE to its path.",
+                    "and set GOOGLE_DRIVE_CREDENTIALS_FILE to its path,\n"
+                    "or run the setup wizard: bash google-drive-reader/setup.sh",
                     file=sys.stderr,
                 )
                 sys.exit(1)
