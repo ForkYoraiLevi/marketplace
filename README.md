@@ -10,8 +10,9 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 
 | Rule | Description |
 |------|-------------|
-| [continuous-improvement](./continuous-improvement/) | Structured six-phase workflow for finding, planning, and implementing codebase improvements |
+| [continuous-improvement](./continuous-improvement/) | Structured seven-phase workflow for finding, planning, and implementing codebase improvements |
 | [no-ai-credit](./no-ai-credit/) | Prevent AI agents from adding self-attribution to any output |
+| [prior-art](./prior-art/) | Search for existing solutions before building custom code |
 | [telegram-on-complete](./telegram-on-complete/) | Send a Telegram notification after completing any task |
 
 ### Skills
