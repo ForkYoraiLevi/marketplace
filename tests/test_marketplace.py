@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6.0"]
+# dependencies = ["pyyaml>=6.0", "questionary", "rich", "ruff"]
 # ///
 """
 Marketplace test suite.
@@ -15,13 +15,13 @@ Run:
     uv run tests/test_marketplace.py -k rule  # only rule tests
 """
 
+import json
 import os
 import re
 import stat
 import subprocess
 import sys
 import tempfile
-import textwrap
 import unittest
 from pathlib import Path
 
@@ -724,6 +724,662 @@ class TestCatalogConsistency(unittest.TestCase):
                     len(catalog_desc) > 0,
                     f"{rule.name}: empty catalog description",
                 )
+
+
+# --------------------------------------------------------------------------- #
+# Test: Linting (ruff)
+# --------------------------------------------------------------------------- #
+
+
+class TestLinting(unittest.TestCase):
+    """All Python files pass ruff linting."""
+
+    def _all_python_files(self) -> list[Path]:
+        files = [REPO_ROOT / "install.py"]
+        files.append(REPO_ROOT / "tests" / "test_marketplace.py")
+        for item in ALL_ITEMS:
+            for py in item.rglob("*.py"):
+                files.append(py)
+        return sorted(f for f in files if f.exists())
+
+    def test_ruff_lint(self):
+        """Run ruff on all Python files."""
+        targets = [str(f) for f in self._all_python_files()]
+        result = subprocess.run(
+            [sys.executable, "-m", "ruff", "check", *targets],
+            capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(
+            result.returncode, 0,
+            f"ruff found lint issues:\n{result.stdout}",
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Test: Root-level scripts (install.py, scripts/*.sh)
+# --------------------------------------------------------------------------- #
+
+
+class TestRootScripts(unittest.TestCase):
+    """Root-level scripts follow the same conventions as item scripts."""
+
+    def test_install_py_has_valid_syntax(self):
+        result = subprocess.run(
+            [sys.executable, "-c",
+             f"import ast; ast.parse(open('{REPO_ROOT / 'install.py'}').read())"],
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(result.returncode, 0, f"install.py syntax error: {result.stderr}")
+
+    def test_install_py_has_pep723(self):
+        content = (REPO_ROOT / "install.py").read_text()
+        self.assertIn("# /// script", content)
+        self.assertIn("requires-python", content)
+
+    def test_scripts_install_sh_exists_and_valid(self):
+        sh = REPO_ROOT / "scripts" / "install.sh"
+        self.assertTrue(sh.exists(), "scripts/install.sh missing")
+        content = sh.read_text()
+        self.assertTrue(content.splitlines()[0].startswith("#!/"), "missing shebang")
+        self.assertIn("set -e", content, "missing set -e")
+        mode = sh.stat().st_mode
+        self.assertTrue(mode & stat.S_IXUSR, "not executable")
+        result = subprocess.run(["bash", "-n", str(sh)], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, f"bash syntax error: {result.stderr}")
+
+    def test_scripts_install_rule_sh_exists_and_valid(self):
+        sh = REPO_ROOT / "scripts" / "install-rule.sh"
+        self.assertTrue(sh.exists(), "scripts/install-rule.sh missing")
+        content = sh.read_text()
+        self.assertTrue(content.splitlines()[0].startswith("#!/"), "missing shebang")
+        self.assertIn("set -e", content, "missing set -e")
+        mode = sh.stat().st_mode
+        self.assertTrue(mode & stat.S_IXUSR, "not executable")
+        result = subprocess.run(["bash", "-n", str(sh)], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, f"bash syntax error: {result.stderr}")
+
+    def test_run_ci_local_sh_valid(self):
+        sh = REPO_ROOT / "tests" / "run-ci-local.sh"
+        if not sh.exists():
+            self.skipTest("tests/run-ci-local.sh not present")
+        result = subprocess.run(["bash", "-n", str(sh)], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, f"bash syntax error: {result.stderr}")
+
+
+# --------------------------------------------------------------------------- #
+# Test: Skill conventions (extended)
+# --------------------------------------------------------------------------- #
+
+
+class TestSkillConventionsExtended(unittest.TestCase):
+    """Additional skill convention checks not in the base suite."""
+
+    def test_skill_name_matches_directory(self):
+        """The 'name' field in SKILL.md frontmatter must match the directory name."""
+        for skill in SKILLS:
+            with self.subTest(skill=skill.name):
+                fm = _parse_yaml_frontmatter((skill / "SKILL.md").read_text())
+                if fm is None or "name" not in fm:
+                    continue
+                self.assertEqual(
+                    fm["name"], skill.name,
+                    f"{skill.name}: SKILL.md name '{fm['name']}' doesn't match directory",
+                )
+
+    def test_skill_triggers_valid(self):
+        """If triggers are specified, they must be 'user' and/or 'model'."""
+        valid_triggers = {"user", "model"}
+        for skill in SKILLS:
+            with self.subTest(skill=skill.name):
+                fm = _parse_yaml_frontmatter((skill / "SKILL.md").read_text())
+                if fm is None or "triggers" not in fm:
+                    continue
+                for t in fm["triggers"]:
+                    self.assertIn(
+                        t, valid_triggers,
+                        f"{skill.name}: invalid trigger '{t}' (must be user or model)",
+                    )
+
+    def test_skill_setup_sh_is_valid_shell(self):
+        """If a skill has setup.sh, it must be valid bash."""
+        for skill in SKILLS:
+            setup = skill / "setup.sh"
+            if not setup.exists():
+                continue
+            with self.subTest(skill=skill.name):
+                content = setup.read_text()
+                self.assertTrue(content.splitlines()[0].startswith("#!/"), "missing shebang")
+                self.assertIn("set -e", content, "missing set -e")
+                mode = setup.stat().st_mode
+                self.assertTrue(mode & stat.S_IXUSR, "not executable")
+                result = subprocess.run(
+                    ["bash", "-n", str(setup)],
+                    capture_output=True, text=True, timeout=10,
+                )
+                self.assertEqual(result.returncode, 0, f"bash syntax error: {result.stderr}")
+
+    def test_skill_has_scripts_or_instructions(self):
+        """Every skill should have either a scripts/ dir or substantial instructions."""
+        for skill in SKILLS:
+            with self.subTest(skill=skill.name):
+                has_scripts = (skill / "scripts").is_dir()
+                body = _strip_frontmatter((skill / "SKILL.md").read_text()).strip()
+                # Must have scripts or at least 100 chars of instructions
+                self.assertTrue(
+                    has_scripts or len(body) > 100,
+                    f"{skill.name}: no scripts/ dir and prompt body is too short ({len(body)} chars)",
+                )
+
+
+# --------------------------------------------------------------------------- #
+# Test: install.py unit tests (non-interactive logic)
+# --------------------------------------------------------------------------- #
+
+
+class TestInstallerMCP(unittest.TestCase):
+    """Unit tests for install.py MCP server install/uninstall."""
+
+    def test_install_mcp_creates_config(self):
+        """install_mcp should create config file with mcpServers entry."""
+        # Import lazily to avoid questionary/rich dependency in test runner
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_mcp
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            server = {"config": {"command": "uvx", "args": ["test-server"]}}
+            result = install_mcp("test", server, cfg)
+            self.assertEqual(result, "installed")
+            self.assertTrue(cfg.exists())
+            data = json.loads(cfg.read_text())
+            self.assertIn("test", data["mcpServers"])
+
+    def test_install_mcp_idempotent(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_mcp
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            server = {"config": {"command": "uvx", "args": ["test"]}}
+            install_mcp("test", server, cfg)
+            result = install_mcp("test", server, cfg)
+            self.assertEqual(result, "already installed")
+
+    def test_install_mcp_corrupt_config(self):
+        """install_mcp should handle corrupt JSON gracefully."""
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_mcp
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            cfg.write_text("not json")
+            server = {"config": {"command": "test"}}
+            result = install_mcp("test", server, cfg)
+            self.assertEqual(result, "installed")
+
+    def test_uninstall_mcp_removes_server(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_mcp, uninstall_mcp
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            server = {"config": {"command": "test"}}
+            install_mcp("test", server, cfg)
+            result = uninstall_mcp("test", cfg)
+            self.assertEqual(result, "removed")
+            data = json.loads(cfg.read_text())
+            self.assertNotIn("test", data["mcpServers"])
+
+    def test_uninstall_mcp_not_found(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import uninstall_mcp
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            result = uninstall_mcp("test", cfg)
+            self.assertEqual(result, "not found")
+
+    def test_uninstall_mcp_not_installed(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import uninstall_mcp
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            cfg.write_text('{"mcpServers": {}}')
+            result = uninstall_mcp("test", cfg)
+            self.assertEqual(result, "not installed")
+
+    def test_uninstall_mcp_corrupt_config(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import uninstall_mcp
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            cfg.write_text("corrupt")
+            result = uninstall_mcp("test", cfg)
+            self.assertEqual(result, "config unreadable")
+
+
+class TestInstallerReadMCP(unittest.TestCase):
+    """Unit tests for read_mcp_servers."""
+
+    def test_read_mcp_servers_missing_file(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import read_mcp_servers
+        finally:
+            sys.path.pop(0)
+
+        result = read_mcp_servers(Path("/tmp/nonexistent_config.json"))
+        self.assertEqual(result, {})
+
+    def test_read_mcp_servers_valid(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import read_mcp_servers
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            cfg.write_text('{"mcpServers": {"foo": {"command": "bar"}}}')
+            result = read_mcp_servers(cfg)
+            self.assertEqual(result, {"foo": {"command": "bar"}})
+
+    def test_read_mcp_servers_corrupt(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import read_mcp_servers
+        finally:
+            sys.path.pop(0)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.json"
+            cfg.write_text("not json")
+            result = read_mcp_servers(cfg)
+            self.assertEqual(result, {})
+
+
+class TestInstallerRules(unittest.TestCase):
+    """Unit tests for install.py rule install/uninstall with real rules."""
+
+    def _get_installer_funcs(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_rule, uninstall_rule, is_rule_installed, PLATFORMS
+            return install_rule, uninstall_rule, is_rule_installed, PLATFORMS
+        finally:
+            sys.path.pop(0)
+
+    def test_install_rule_agents_format(self):
+        """Install a real rule in agents format."""
+        install_rule, _, _, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            result = install_rule(rule_dict, "devin", paths)
+            self.assertEqual(result, "installed")
+            self.assertTrue(target.exists())
+            self.assertIn("##", target.read_text())
+
+    def test_install_rule_agents_idempotent(self):
+        install_rule, _, _, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            install_rule(rule_dict, "devin", paths)
+            result = install_rule(rule_dict, "devin", paths)
+            self.assertEqual(result, "already installed")
+
+    def test_install_rule_cursor_format(self):
+        install_rule, _, _, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "rules"
+            paths = {"rules": target}
+            result = install_rule(rule_dict, "cursor", paths)
+            self.assertEqual(result, "installed")
+            self.assertTrue((target / f"{rule.name}.md").exists())
+
+    def test_uninstall_rule_agents(self):
+        install_rule, uninstall_rule, _, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            install_rule(rule_dict, "devin", paths)
+            result = uninstall_rule(rule_dict, "devin", paths)
+            self.assertEqual(result, "removed")
+
+    def test_uninstall_rule_not_found(self):
+        _, uninstall_rule, _, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            result = uninstall_rule(rule_dict, "devin", paths)
+            self.assertEqual(result, "not found")
+
+    def test_uninstall_rule_not_installed(self):
+        _, uninstall_rule, _, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            target.write_text("# Some other content\n")
+            paths = {"rules": target}
+            result = uninstall_rule(rule_dict, "devin", paths)
+            self.assertEqual(result, "not installed")
+
+    def test_uninstall_rule_cursor_format(self):
+        install_rule, uninstall_rule, _, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "rules"
+            paths = {"rules": target}
+            install_rule(rule_dict, "cursor", paths)
+            result = uninstall_rule(rule_dict, "cursor", paths)
+            self.assertEqual(result, "removed")
+            self.assertFalse((target / f"{rule.name}.md").exists())
+
+    def test_uninstall_rule_cursor_not_installed(self):
+        _, uninstall_rule, _, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "rules"
+            target.mkdir()
+            paths = {"rules": target}
+            result = uninstall_rule(rule_dict, "cursor", paths)
+            self.assertEqual(result, "not installed")
+
+    def test_is_rule_installed_agents(self):
+        install_rule, _, is_rule_installed, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            self.assertFalse(is_rule_installed("devin", rule.name, paths))
+            install_rule(rule_dict, "devin", paths)
+            self.assertTrue(is_rule_installed("devin", rule.name, paths))
+
+    def test_is_rule_installed_cursor(self):
+        install_rule, _, is_rule_installed, _ = self._get_installer_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "rules"
+            paths = {"rules": target}
+            self.assertFalse(is_rule_installed("cursor", rule.name, paths))
+            install_rule(rule_dict, "cursor", paths)
+            self.assertTrue(is_rule_installed("cursor", rule.name, paths))
+
+
+class TestInstallerSkills(unittest.TestCase):
+    """Unit tests for install.py skill install/uninstall."""
+
+    def _get_funcs(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_skill, uninstall_skill, is_skill_installed
+            return install_skill, uninstall_skill, is_skill_installed
+        finally:
+            sys.path.pop(0)
+
+    def test_install_skill(self):
+        install_skill, _, _ = self._get_funcs()
+        skill = SKILLS[0]
+        skill_dict = {"name": skill.name, "path": skill}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            skills_dir = Path(tmpdir) / "skills"
+            skills_dir.mkdir()
+            result = install_skill(skill_dict, skills_dir)
+            self.assertEqual(result, "installed")
+            self.assertTrue((skills_dir / skill.name).is_dir())
+            self.assertTrue((skills_dir / skill.name / "SKILL.md").exists())
+
+    def test_install_skill_overwrites(self):
+        """Installing over an existing skill should replace it."""
+        install_skill, _, _ = self._get_funcs()
+        skill = SKILLS[0]
+        skill_dict = {"name": skill.name, "path": skill}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            skills_dir = Path(tmpdir) / "skills"
+            skills_dir.mkdir()
+            install_skill(skill_dict, skills_dir)
+            result = install_skill(skill_dict, skills_dir)
+            self.assertEqual(result, "installed")
+
+    def test_install_skill_not_supported(self):
+        install_skill, _, _ = self._get_funcs()
+        skill_dict = {"name": "test", "path": Path(".")}
+        result = install_skill(skill_dict, None)
+        self.assertEqual(result, "not supported")
+
+    def test_uninstall_skill(self):
+        install_skill, uninstall_skill, _ = self._get_funcs()
+        skill = SKILLS[0]
+        skill_dict = {"name": skill.name, "path": skill}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            skills_dir = Path(tmpdir) / "skills"
+            skills_dir.mkdir()
+            install_skill(skill_dict, skills_dir)
+            result = uninstall_skill(skill.name, skills_dir)
+            self.assertEqual(result, "removed")
+            self.assertFalse((skills_dir / skill.name).exists())
+
+    def test_uninstall_skill_not_installed(self):
+        _, uninstall_skill, _ = self._get_funcs()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            skills_dir = Path(tmpdir) / "skills"
+            skills_dir.mkdir()
+            result = uninstall_skill("nonexistent", skills_dir)
+            self.assertEqual(result, "not installed")
+
+    def test_uninstall_skill_not_supported(self):
+        _, uninstall_skill, _ = self._get_funcs()
+        result = uninstall_skill("test", None)
+        self.assertEqual(result, "not supported")
+
+    def test_is_skill_installed(self):
+        install_skill, _, is_skill_installed = self._get_funcs()
+        skill = SKILLS[0]
+        skill_dict = {"name": skill.name, "path": skill}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            skills_dir = Path(tmpdir) / "skills"
+            skills_dir.mkdir()
+            paths = {"skills": skills_dir}
+            self.assertFalse(is_skill_installed(skill.name, paths))
+            install_skill(skill_dict, skills_dir)
+            self.assertTrue(is_skill_installed(skill.name, paths))
+
+    def test_is_skill_installed_no_skills_dir(self):
+        _, _, is_skill_installed = self._get_funcs()
+        paths = {"skills": None}
+        self.assertFalse(is_skill_installed("anything", paths))
+
+
+class TestInstallerScanner(unittest.TestCase):
+    """Unit tests for scan_rules / scan_skills on the real marketplace."""
+
+    def test_scan_rules_finds_all(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import scan_rules
+        finally:
+            sys.path.pop(0)
+
+        rules = scan_rules(REPO_ROOT)
+        rule_names = {r["name"] for r in rules}
+        expected = {r.name for r in RULES}
+        self.assertEqual(rule_names, expected)
+
+    def test_scan_skills_finds_all(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import scan_skills
+        finally:
+            sys.path.pop(0)
+
+        skills = scan_skills(REPO_ROOT)
+        skill_names = {s["name"] for s in skills}
+        expected = {s.name for s in SKILLS}
+        self.assertEqual(skill_names, expected)
+
+    def test_scan_rules_has_descriptions(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import scan_rules
+        finally:
+            sys.path.pop(0)
+
+        rules = scan_rules(REPO_ROOT)
+        for r in rules:
+            with self.subTest(rule=r["name"]):
+                self.assertTrue(
+                    len(r["description"]) > 0,
+                    f"{r['name']}: scan_rules returned empty description",
+                )
+
+    def test_scan_skills_has_descriptions(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import scan_skills
+        finally:
+            sys.path.pop(0)
+
+        skills = scan_skills(REPO_ROOT)
+        for s in skills:
+            with self.subTest(skill=s["name"]):
+                self.assertTrue(
+                    len(s["description"]) > 0,
+                    f"{s['name']}: scan_skills returned empty description",
+                )
+
+    def test_scan_rules_has_formats(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import scan_rules
+        finally:
+            sys.path.pop(0)
+
+        rules = scan_rules(REPO_ROOT)
+        for r in rules:
+            with self.subTest(rule=r["name"]):
+                self.assertIn("windsurf", r["formats"])
+                self.assertIn("cursor", r["formats"])
+
+
+class TestInstallerUIHelpers(unittest.TestCase):
+    """Unit tests for UI helper functions."""
+
+    def test_status_badge(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import status_badge
+        finally:
+            sys.path.pop(0)
+
+        self.assertIn("installed", status_badge(True))
+        self.assertIn("not installed", status_badge(False))
+
+    def test_action_badge_installed(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import action_badge
+        finally:
+            sys.path.pop(0)
+
+        self.assertIn("green", action_badge("installed"))
+        self.assertIn("green", action_badge("removed"))
+        self.assertIn("dim", action_badge("already installed"))
+        self.assertIn("dim", action_badge("not installed"))
+        self.assertIn("dim", action_badge("not found"))
+        self.assertIn("yellow", action_badge("no cursor format"))
+
+
+# --------------------------------------------------------------------------- #
+# Test: Rule uninstall line-removal edge cases
+# --------------------------------------------------------------------------- #
+
+
+class TestRuleUninstallEdgeCases(unittest.TestCase):
+    """Verify uninstall_rule correctly removes rule blocks from AGENTS.md."""
+
+    def _get_funcs(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_rule, uninstall_rule
+            return install_rule, uninstall_rule
+        finally:
+            sys.path.pop(0)
+
+    def test_uninstall_preserves_other_rules(self):
+        """Uninstalling one rule should not affect other rules."""
+        install_rule, uninstall_rule = self._get_funcs()
+        if len(RULES) < 2:
+            self.skipTest("Need at least 2 rules")
+        rule_a = {"name": RULES[0].name, "path": RULES[0]}
+        rule_b = {"name": RULES[1].name, "path": RULES[1]}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            install_rule(rule_a, "devin", paths)
+            install_rule(rule_b, "devin", paths)
+            uninstall_rule(rule_a, "devin", paths)
+            content = target.read_text()
+            # rule_b should still be there
+            rule_b_title = ""
+            for line in (RULES[1] / "rule.md").read_text().splitlines():
+                if line.startswith("## "):
+                    rule_b_title = line[3:].strip()
+                    break
+            self.assertIn(rule_b_title, content)
+
+    def test_install_uninstall_roundtrip(self):
+        """Install then uninstall should leave an empty-ish file."""
+        install_rule, uninstall_rule = self._get_funcs()
+        rule = {"name": RULES[0].name, "path": RULES[0]}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            install_rule(rule, "devin", paths)
+            self.assertTrue(len(target.read_text().strip()) > 0)
+            uninstall_rule(rule, "devin", paths)
+            # File should have minimal content
+            remaining = target.read_text().strip()
+            # Should not contain any ## headings from the rule
+            self.assertNotIn("## ", remaining)
 
 
 # --------------------------------------------------------------------------- #
