@@ -22,6 +22,7 @@ from pathlib import Path
 from textwrap import dedent
 
 import questionary
+from prompt_toolkit.keys import Keys as PtKeys
 from questionary import Style
 from rich.console import Console
 from rich.panel import Panel
@@ -33,6 +34,16 @@ console = Console()
 # Key binding hints shown on interactive prompts
 KEYS_CHECKBOX = "(Space: toggle, Enter: confirm, Esc: cancel)"
 KEYS_CONFIRM = "(Enter: confirm, Esc: cancel)"
+
+
+def _add_escape_binding(question: questionary.Question) -> questionary.Question:
+    """Patch a questionary Question so that Escape cancels (same as Ctrl+C)."""
+
+    @question.application.key_bindings.add(PtKeys.Escape, eager=True)
+    def _escape(event):
+        event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
+
+    return question
 
 STYLE = Style([
     ("qmark", "fg:cyan bold"),
@@ -419,13 +430,13 @@ def main():
         sys.exit(1)
     show_platform_table(platforms, scope)
 
-    platform_choices = questionary.checkbox(
+    platform_choices = _add_escape_binding(questionary.checkbox(
         "Which platforms?",
         choices=[questionary.Choice(info["label"], value=pid, checked=True)
                  for pid, info in platforms.items()],
         style=STYLE,
         instruction=KEYS_CHECKBOX,
-    ).ask()
+    )).ask()
     if not platform_choices:
         console.print("[yellow]Cancelled.[/yellow]")
         return
@@ -452,12 +463,12 @@ def main():
         else:
             mcp_choices_list.append(questionary.Choice(label, value=name, checked=is_inst))
 
-    mcp_choices = questionary.checkbox(
+    mcp_choices = _add_escape_binding(questionary.checkbox(
         f"MCP servers to {mode}:",
         choices=mcp_choices_list,
         style=STYLE,
         instruction=KEYS_CHECKBOX,
-    ).ask()
+    )).ask()
     if mcp_choices is None:
         console.print("[yellow]Cancelled.[/yellow]")
         return
@@ -474,12 +485,12 @@ def main():
         else:
             rule_choices_list.append(questionary.Choice(label, value=r["name"], checked=is_inst))
 
-    rule_choices = questionary.checkbox(
+    rule_choices = _add_escape_binding(questionary.checkbox(
         f"Rules to {mode}:",
         choices=rule_choices_list,
         style=STYLE,
         instruction=KEYS_CHECKBOX,
-    ).ask()
+    )).ask()
     if rule_choices is None:
         console.print("[yellow]Cancelled.[/yellow]")
         return
@@ -497,12 +508,12 @@ def main():
         else:
             skill_choices_list.append(questionary.Choice(label, value=s["name"], checked=is_inst))
 
-    skill_choices = questionary.checkbox(
+    skill_choices = _add_escape_binding(questionary.checkbox(
         f"Skills to {mode}:",
         choices=skill_choices_list,
         style=STYLE,
         instruction=KEYS_CHECKBOX,
-    ).ask()
+    )).ask()
     if skill_choices is None:
         console.print("[yellow]Cancelled.[/yellow]")
         return
@@ -524,10 +535,10 @@ def main():
     summary.add_row("Scope", scope)
     console.print(Panel(summary, title="Summary", border_style=mode_color))
 
-    proceed = questionary.confirm(
+    proceed = _add_escape_binding(questionary.confirm(
         f"Proceed with {mode}?", default=True, style=STYLE,
         instruction=KEYS_CONFIRM,
-    ).ask()
+    )).ask()
     if not proceed:
         console.print("[yellow]Cancelled.[/yellow]")
         return
