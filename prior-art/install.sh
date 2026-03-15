@@ -21,7 +21,9 @@ FORMAT="all"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --global|-g) SCOPE="global"; shift ;;
-        --format|-f) FORMAT="$2"; shift 2 ;;
+        --format|-f)
+            [[ $# -lt 2 ]] && echo "Error: --format requires a value (agents|windsurf|cursor|claude|all)" && exit 1
+            FORMAT="$2"; shift 2 ;;
         --help|-h)
             echo "Usage: ./install.sh [--global] [--format agents|windsurf|cursor|claude|all]"
             echo ""
@@ -33,6 +35,11 @@ while [[ $# -gt 0 ]]; do
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
 done
+
+case "$FORMAT" in
+    all|agents|windsurf|cursor|claude) ;;
+    *) echo "Unknown format: $FORMAT. Valid formats: agents, windsurf, cursor, claude, all"; exit 1 ;;
+esac
 
 install_agents() {
     local target="$1"
@@ -85,15 +92,33 @@ echo "Installing prior-art rule ($SCOPE, format: $FORMAT)"
 echo ""
 
 if [[ "$SCOPE" == "global" ]]; then
-    [[ "$FORMAT" == "all" || "$FORMAT" == "agents" ]] && install_agents "$HOME/.config/cognition/AGENTS.md"
-    [[ "$FORMAT" == "all" || "$FORMAT" == "windsurf" ]] && install_windsurf "$HOME/.windsurf/rules"
-    [[ "$FORMAT" == "all" || "$FORMAT" == "cursor" ]] && install_cursor "$HOME/.cursor/rules"
-    [[ "$FORMAT" == "all" || "$FORMAT" == "claude" ]] && install_claude "$HOME/.claude/CLAUDE.md"
+    # Global installs
+    if [[ "$FORMAT" == "all" || "$FORMAT" == "agents" ]]; then
+        install_agents "$HOME/.config/cognition/AGENTS.md"
+    fi
+    if [[ "$FORMAT" == "all" || "$FORMAT" == "windsurf" ]]; then
+        install_windsurf "$HOME/.windsurf/rules"
+    fi
+    if [[ "$FORMAT" == "all" || "$FORMAT" == "cursor" ]]; then
+        install_cursor "$HOME/.cursor/rules"
+    fi
+    if [[ "$FORMAT" == "all" || "$FORMAT" == "claude" ]]; then
+        install_claude "$HOME/.claude/CLAUDE.md"
+    fi
 else
-    [[ "$FORMAT" == "all" || "$FORMAT" == "agents" ]] && install_agents "AGENTS.md"
-    [[ "$FORMAT" == "all" || "$FORMAT" == "windsurf" ]] && install_windsurf ".windsurf/rules"
-    [[ "$FORMAT" == "all" || "$FORMAT" == "cursor" ]] && install_cursor ".cursor/rules"
-    [[ "$FORMAT" == "all" || "$FORMAT" == "claude" ]] && install_claude "CLAUDE.md"
+    # Project installs (current directory)
+    if [[ "$FORMAT" == "all" || "$FORMAT" == "agents" ]]; then
+        install_agents "AGENTS.md"
+    fi
+    if [[ "$FORMAT" == "all" || "$FORMAT" == "windsurf" ]]; then
+        install_windsurf ".windsurf/rules"
+    fi
+    if [[ "$FORMAT" == "all" || "$FORMAT" == "cursor" ]]; then
+        install_cursor ".cursor/rules"
+    fi
+    if [[ "$FORMAT" == "all" || "$FORMAT" == "claude" ]]; then
+        install_claude "CLAUDE.md"
+    fi
 fi
 
 echo ""
