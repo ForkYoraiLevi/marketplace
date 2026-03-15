@@ -18,7 +18,6 @@ git clone https://github.com/ForkYoraiLevi/marketplace.git /tmp/marketplace
 # Install for a specific tool only
 /tmp/marketplace/blast-radius/install.sh --format windsurf
 /tmp/marketplace/blast-radius/install.sh --format cursor
-/tmp/marketplace/blast-radius/install.sh --format claude
 /tmp/marketplace/blast-radius/install.sh --format agents
 ```
 
@@ -48,13 +47,6 @@ mkdir -p .cursor/rules
 cp blast-radius/formats/cursor.md .cursor/rules/blast-radius.md
 ```
 
-### Claude Code
-
-Append the contents of `rule.md` to your `CLAUDE.md`:
-
-```bash
-cat blast-radius/rule.md >> CLAUDE.md
-```
 
 ## What it enforces
 
@@ -74,4 +66,3 @@ This is a **rule**, not a skill. Rules are loaded automatically at session start
 | AGENTS.md | `AGENTS.md` (appended) | Always on |
 | Windsurf | `.windsurf/rules/blast-radius.md` | `trigger: always_on` |
 | Cursor | `.cursor/rules/blast-radius.md` | `alwaysApply: true` |
-| Claude Code | `CLAUDE.md` (appended) | Always on |

@@ -18,7 +18,6 @@ git clone https://github.com/ForkYoraiLevi/marketplace.git /tmp/marketplace
 # Install for a specific tool only
 /tmp/marketplace/continuous-improvement/install.sh --format windsurf
 /tmp/marketplace/continuous-improvement/install.sh --format cursor
-/tmp/marketplace/continuous-improvement/install.sh --format claude
 /tmp/marketplace/continuous-improvement/install.sh --format agents
 ```
 
@@ -48,13 +47,6 @@ mkdir -p .cursor/rules
 cp continuous-improvement/formats/cursor.md .cursor/rules/continuous-improvement.md
 ```
 
-### Claude Code
-
-Append the contents of `rule.md` to your `CLAUDE.md`:
-
-```bash
-cat continuous-improvement/rule.md >> CLAUDE.md
-```
 
 ## What it enforces
 
@@ -86,4 +78,3 @@ This is a **rule**, not a skill. Rules are loaded automatically at session start
 | AGENTS.md | `AGENTS.md` (appended) | Always on |
 | Windsurf | `.windsurf/rules/continuous-improvement.md` | `trigger: always_on` |
 | Cursor | `.cursor/rules/continuous-improvement.md` | `alwaysApply: true` |
-| Claude Code | `CLAUDE.md` (appended) | Always on |

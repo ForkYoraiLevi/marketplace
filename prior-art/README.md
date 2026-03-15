@@ -18,7 +18,6 @@ git clone https://github.com/ForkYoraiLevi/marketplace.git /tmp/marketplace
 # Install for a specific tool only
 /tmp/marketplace/prior-art/install.sh --format windsurf
 /tmp/marketplace/prior-art/install.sh --format cursor
-/tmp/marketplace/prior-art/install.sh --format claude
 /tmp/marketplace/prior-art/install.sh --format agents
 ```
 
@@ -44,12 +43,6 @@ mkdir -p .cursor/rules
 cp prior-art/formats/cursor.md .cursor/rules/prior-art.md
 ```
 
-### Claude Code
-
-```bash
-cat prior-art/rule.md >> CLAUDE.md
-```
-
 ## What it enforces
 
 - **Search before building** — check the codebase, project dependencies, and the web for existing solutions before writing custom code
@@ -65,4 +58,3 @@ cat prior-art/rule.md >> CLAUDE.md
 | AGENTS.md | `AGENTS.md` (appended) | Always on |
 | Windsurf | `.windsurf/rules/prior-art.md` | `trigger: always_on` |
 | Cursor | `.cursor/rules/prior-art.md` | `alwaysApply: true` |
-| Claude Code | `CLAUDE.md` (appended) | Always on |

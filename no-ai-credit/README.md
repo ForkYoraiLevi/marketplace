@@ -18,7 +18,6 @@ git clone https://github.com/ForkYoraiLevi/marketplace.git /tmp/marketplace
 # Install for a specific tool only
 /tmp/marketplace/no-ai-credit/install.sh --format windsurf
 /tmp/marketplace/no-ai-credit/install.sh --format cursor
-/tmp/marketplace/no-ai-credit/install.sh --format claude
 /tmp/marketplace/no-ai-credit/install.sh --format agents
 ```
 
@@ -48,13 +47,6 @@ mkdir -p .cursor/rules
 cp no-ai-credit/formats/cursor.md .cursor/rules/no-ai-credit.md
 ```
 
-### Claude Code
-
-Append the contents of `rule.md` to your `CLAUDE.md`:
-
-```bash
-cat no-ai-credit/rule.md >> CLAUDE.md
-```
 
 ## What it enforces
 
@@ -73,4 +65,3 @@ This is a **rule**, not a skill. Rules are loaded automatically at session start
 | AGENTS.md | `AGENTS.md` (appended) | Always on |
 | Windsurf | `.windsurf/rules/no-ai-credit.md` | `trigger: always_on` |
 | Cursor | `.cursor/rules/no-ai-credit.md` | `alwaysApply: true` |
-| Claude Code | `CLAUDE.md` (appended) | Always on |

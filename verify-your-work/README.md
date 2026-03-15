@@ -18,7 +18,6 @@ git clone https://github.com/ForkYoraiLevi/marketplace.git /tmp/marketplace
 # Install for a specific tool only
 /tmp/marketplace/verify-your-work/install.sh --format windsurf
 /tmp/marketplace/verify-your-work/install.sh --format cursor
-/tmp/marketplace/verify-your-work/install.sh --format claude
 /tmp/marketplace/verify-your-work/install.sh --format agents
 ```
 
@@ -48,13 +47,6 @@ mkdir -p .cursor/rules
 cp verify-your-work/formats/cursor.md .cursor/rules/verify-your-work.md
 ```
 
-### Claude Code
-
-Append the contents of `rule.md` to your `CLAUDE.md`:
-
-```bash
-cat verify-your-work/rule.md >> CLAUDE.md
-```
 
 ## What it enforces
 
@@ -72,4 +64,3 @@ This is a **rule**, not a skill. Rules are loaded automatically at session start
 | AGENTS.md | `AGENTS.md` (appended) | Always on |
 | Windsurf | `.windsurf/rules/verify-your-work.md` | `trigger: always_on` |
 | Cursor | `.cursor/rules/verify-your-work.md` | `alwaysApply: true` |
-| Claude Code | `CLAUDE.md` (appended) | Always on |

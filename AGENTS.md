@@ -97,4 +97,4 @@ Rules consume agent context in every session. Verbose rules dilute attention and
 - **Aim for actionable checklists, not documentation.** If a rule reads like an essay, it's too long.
 - **Every line should be an instruction the agent can act on.** Remove explanations of *why* — agents need *what* and *when*.
 - **Consolidate** — 5 crisp bullet points beat 40 lines of prose.
-- Rules installed to multiple targets (AGENTS.md + CLAUDE.md) appear multiple times in context. The install scripts warn about this — use `--format agents` to install to a single target.
+- Rules installed to multiple targets appear multiple times in agent context. Use `--format agents` to install to a single target.

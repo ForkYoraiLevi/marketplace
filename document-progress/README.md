@@ -18,7 +18,6 @@ git clone https://github.com/ForkYoraiLevi/marketplace.git /tmp/marketplace
 # Install for a specific tool only
 /tmp/marketplace/document-progress/install.sh --format windsurf
 /tmp/marketplace/document-progress/install.sh --format cursor
-/tmp/marketplace/document-progress/install.sh --format claude
 /tmp/marketplace/document-progress/install.sh --format agents
 ```
 
@@ -48,13 +47,6 @@ mkdir -p .cursor/rules
 cp document-progress/formats/cursor.md .cursor/rules/document-progress.md
 ```
 
-### Claude Code
-
-Append the contents of `rule.md` to your `CLAUDE.md`:
-
-```bash
-cat document-progress/rule.md >> CLAUDE.md
-```
 
 ## What it enforces
 
@@ -82,4 +74,3 @@ This is a **rule**, not a skill. Rules are loaded automatically at session start
 | AGENTS.md | `AGENTS.md` (appended) | Always on |
 | Windsurf | `.windsurf/rules/document-progress.md` | `trigger: always_on` |
 | Cursor | `.cursor/rules/document-progress.md` | `alwaysApply: true` |
-| Claude Code | `CLAUDE.md` (appended) | Always on |

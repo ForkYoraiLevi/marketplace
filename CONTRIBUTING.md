@@ -80,7 +80,7 @@ my-rule/
 
 ### 3. Write rule.md
 
-Plain Markdown, no frontmatter. This is the universal format (AGENTS.md / CLAUDE.md).
+Plain Markdown, no frontmatter. This is the universal format (AGENTS.md).
 
 ### 4. Create format-specific files
 

@@ -22,7 +22,7 @@ my-rule/
 
 ## rule.md (base format)
 
-The `rule.md` file contains the rule content in plain Markdown with no frontmatter. This is the universal format used by `AGENTS.md` and `CLAUDE.md`, which load rules as raw Markdown.
+The `rule.md` file contains the rule content in plain Markdown with no frontmatter. This is the universal format used by `AGENTS.md`, which loads rules as raw Markdown.
 
 ```markdown
 ## My Rule Title

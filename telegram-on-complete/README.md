@@ -20,7 +20,6 @@ git clone https://github.com/ForkYoraiLevi/marketplace.git /tmp/marketplace
 # Install for a specific tool only
 /tmp/marketplace/telegram-on-complete/install.sh --format windsurf
 /tmp/marketplace/telegram-on-complete/install.sh --format cursor
-/tmp/marketplace/telegram-on-complete/install.sh --format claude
 /tmp/marketplace/telegram-on-complete/install.sh --format agents
 ```
 
@@ -52,12 +51,6 @@ mkdir -p .cursor/rules
 cp telegram-on-complete/formats/cursor.md .cursor/rules/telegram-on-complete.md
 ```
 
-### Claude Code
-
-```bash
-cat telegram-on-complete/rule.md >> CLAUDE.md
-```
-
 ## What it enforces
 
 - Agent ALWAYS sends a Telegram message after completing a task
@@ -77,4 +70,3 @@ cat telegram-on-complete/rule.md >> CLAUDE.md
 | AGENTS.md | `AGENTS.md` (appended) | Always on |
 | Windsurf | `.windsurf/rules/telegram-on-complete.md` | `trigger: always_on` |
 | Cursor | `.cursor/rules/telegram-on-complete.md` | `alwaysApply: true` |
-| Claude Code | `CLAUDE.md` (appended) | Always on |
