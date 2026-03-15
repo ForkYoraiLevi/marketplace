@@ -9,7 +9,7 @@ Useful as a "ping me when you're done" skill — the agent sends a concise task 
 Run the interactive setup script — it handles everything:
 
 ```bash
-uv run scripts/setup.py
+uv run telegram-notify/scripts/setup.py
 ```
 
 The script will:
@@ -40,7 +40,7 @@ If you prefer to set things up manually:
 The script is self-contained with zero dependencies (PEP 723, stdlib only). No install step needed:
 
 ```bash
-uv run scripts/send_telegram.py --message "Hello from the terminal!"
+uv run telegram-notify/scripts/send_telegram.py --message "Hello from the terminal!"
 ```
 
 ### Options
@@ -56,10 +56,10 @@ uv run scripts/send_telegram.py --message "Hello from the terminal!"
 
 ```bash
 # Simple notification
-uv run scripts/send_telegram.py -m "Build finished successfully"
+uv run telegram-notify/scripts/send_telegram.py -m "Build finished successfully"
 
 # With Markdown formatting
-uv run scripts/send_telegram.py -m "Deploy *complete* for \`main\`" --parse-mode Markdown
+uv run telegram-notify/scripts/send_telegram.py -m "Deploy *complete* for \`main\`" --parse-mode Markdown
 ```
 
 ## As an Agent Skill

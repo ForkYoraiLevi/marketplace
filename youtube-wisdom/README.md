@@ -20,13 +20,13 @@ No API keys required. Transcripts are fetched directly from YouTube.
 
 ```bash
 # Fetch transcript only
-uv run scripts/fetch_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID"
+uv run youtube-wisdom/scripts/fetch_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID"
 
 # Preferred language
-uv run scripts/fetch_transcript.py "https://youtu.be/VIDEO_ID" --lang en
+uv run youtube-wisdom/scripts/fetch_transcript.py "https://youtu.be/VIDEO_ID" --lang en
 
 # JSON output
-uv run scripts/fetch_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID" --json
+uv run youtube-wisdom/scripts/fetch_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID" --json
 ```
 
 ### Options

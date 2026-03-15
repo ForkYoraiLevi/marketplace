@@ -63,7 +63,7 @@ cat telegram-on-complete/rule.md >> CLAUDE.md
 - Agent ALWAYS sends a Telegram message after completing a task
 - Agent ALWAYS notifies on failure if it cannot recover
 - Agent ALWAYS notifies after long-running operations finish
-- Agent does NOT spam notifications for mid-task updates or clarification questions
+- Agent does NOT spam notifications for mid-task progress updates
 
 ## Prerequisites
 

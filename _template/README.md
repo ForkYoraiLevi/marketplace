@@ -18,7 +18,7 @@ One-sentence description of what this skill does.
 The script is self-contained with inline dependencies (PEP 723). No install step needed:
 
 ```bash
-uv run scripts/example.py --flag "value"
+uv run _template/scripts/example.py --flag "value"
 ```
 
 ### Options
@@ -32,10 +32,10 @@ uv run scripts/example.py --flag "value"
 
 ```bash
 # Basic usage
-uv run scripts/example.py --flag "hello"
+uv run _template/scripts/example.py --flag "hello"
 
 # Advanced usage
-uv run scripts/example.py --flag "hello" --optional "world"
+uv run _template/scripts/example.py --flag "hello" --optional "world"
 ```
 
 ## As an Agent Skill

@@ -19,7 +19,7 @@ Send emails from the command line or an AI agent session using the [Resend](http
 The script is self-contained with inline dependencies (PEP 723). No install step needed:
 
 ```bash
-uv run scripts/send_email.py --to "recipient@example.com" --subject "Hello" --body "Hi there!"
+uv run send-email/scripts/send_email.py --to "recipient@example.com" --subject "Hello" --body "Hi there!"
 ```
 
 ### Options
@@ -36,10 +36,10 @@ uv run scripts/send_email.py --to "recipient@example.com" --subject "Hello" --bo
 
 ```bash
 # Multiple recipients
-uv run scripts/send_email.py --to "a@example.com" "b@example.com" --subject "Hello" --body "Hi all!"
+uv run send-email/scripts/send_email.py --to "a@example.com" "b@example.com" --subject "Hello" --body "Hi all!"
 
 # HTML email
-uv run scripts/send_email.py --to "a@example.com" --subject "Hello" --body "fallback" --html "<h1>Hello!</h1>"
+uv run send-email/scripts/send_email.py --to "a@example.com" --subject "Hello" --body "fallback" --html "<h1>Hello!</h1>"
 ```
 
 ## As an Agent Skill

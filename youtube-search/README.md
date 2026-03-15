@@ -8,7 +8,6 @@ Uses DuckDuckGo's video search (scoped to YouTube) to find videos, then ranks th
 
 - **Content signals** — titles/descriptions mentioning "tutorial", "deep dive", "from scratch", "conference talk", etc. score higher
 - **Duration** — longer videos (10+ min) are preferred; shorts are penalized
-- **Channel reputation** — known technical channels get a boost
 - **Negative signals** — reaction videos, vlogs, memes, etc. are deprioritized
 
 Falls back to DuckDuckGo text search (`site:youtube.com`) if video search returns sparse results.
