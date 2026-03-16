@@ -10,6 +10,17 @@
 
 These are the **authoritative, current** research documents. Read these first.
 
+### Knowledge Guides (Distilled — Read These Before Raw Data)
+
+| File | Purpose |
+|------|---------|
+| [KNOWLEDGE_BASE.md](KNOWLEDGE_BASE.md) | **Distilled insights** — what works, what matters, key patterns from all 200+ sources |
+| [ANTI_PATTERNS.md](ANTI_PATTERNS.md) | **Noise catalog** — dead ends, traps, and things that look good but aren't |
+| [METHODOLOGY.md](METHODOLOGY.md) | **How to do research** — tools, search strategies, what yields results |
+| [TASKS.md](TASKS.md) | **Maintenance backlog** — open tasks and rules for future updates |
+
+### Per-Platform Findings (Raw Data)
+
 | File | Platform | Lines | Content |
 |------|----------|-------|---------|
 | [SUMMARY_AND_CONCLUSIONS.md](SUMMARY_AND_CONCLUSIONS.md) | All | 431 | **Master synthesis** — cross-platform analysis, key players, strategic conclusions |
@@ -25,9 +36,12 @@ These are the **authoritative, current** research documents. Read these first.
 
 ### Reading Order
 
-1. `SUMMARY_AND_CONCLUSIONS.md` — executive overview, cross-platform synthesis, strategic conclusions
-2. Platform-specific files (arxiv, github, reddit, twitter, kaggle) — deep detail per source
-3. `competitive_landscape.md` + `industry_overview.md` — market sizing and business context
+1. `KNOWLEDGE_BASE.md` — distilled insights organized by topic (security, economics, architecture, users)
+2. `ANTI_PATTERNS.md` — things to avoid and noise to recognize
+3. `SUMMARY_AND_CONCLUSIONS.md` — full executive synthesis with data tables
+4. Platform-specific files (arxiv, github, reddit, twitter, kaggle) — deep detail per source
+5. `competitive_landscape.md` + `industry_overview.md` — market sizing and business context
+6. `METHODOLOGY.md` — when you need to do more research
 
 ---
 

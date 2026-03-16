@@ -138,10 +138,12 @@ marketplace/
 | Document | Audience | Purpose |
 |----------|----------|---------|
 | [AGENTS.md](./AGENTS.md) | AI agents | Instructions for creating skills and rules autonomously |
+| [docs/ONBOARDING.md](./docs/ONBOARDING.md) | AI agents | Quick-start orientation for new agents (3-minute read) |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Humans | Contribution guide with quality checklist |
 | [docs/SKILL_FORMAT.md](./docs/SKILL_FORMAT.md) | Both | Complete SKILL.md format specification |
 | [docs/RULE_FORMAT.md](./docs/RULE_FORMAT.md) | Both | Rule format specification for all supported tools |
 | [_template/](./_template/) | Both | Copy-and-modify starter for new skills |
+| [research/](./research/) | Both | Market intelligence: 200+ sources, knowledge base, methodology |
 
 ## Contributing
 

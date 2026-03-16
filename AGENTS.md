@@ -2,6 +2,8 @@
 
 This is a skills and rules marketplace. Not a software project — no build system, no package manager.
 
+**New here?** Read `docs/ONBOARDING.md` for a 3-minute orientation. For market intelligence, start with `research/KNOWLEDGE_BASE.md`.
+
 Each top-level directory (except `docs/`, `_template/`, dotfiles) is a skill or rule.
 - Has `SKILL.md` → skill
 - Has `rule.md` + `install.sh` → rule
