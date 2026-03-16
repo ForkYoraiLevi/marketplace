@@ -94,21 +94,26 @@ When you need a response from the user and they may not be watching the terminal
 send a prompt via Telegram and wait for their reply:
 
 ```
-uv run telegram-notify/scripts/wait_for_input.py --prompt "What should I do next?" --timeout 300
+uv run telegram-notify/scripts/wait_for_input.py --prompt "What should I do next?"
 ```
 
 The script sends the prompt, long-polls for a reply, and prints the user's
-message to stdout. Use `--json` for structured output.
+message to stdout. If no reply arrives within the timeout (default: 3 minutes),
+it prints an autonomous-continuation prompt instead — telling you to use your
+best judgment and keep working. Either way the exit code is 0 and you get
+actionable text on stdout.
 
 ### Options
 
 - `--prompt` / `-p` — message to send before waiting (optional)
-- `--timeout` / `-t` — max seconds to wait (default: 300 = 5 minutes)
-- `--json` — output as JSON (`{"received": true, "text": "...", "timeout": false}`)
+- `--timeout` / `-t` — max seconds to wait (default: 180 = 3 minutes)
+- `--json` — output as JSON (includes `autonomous_prompt` field on timeout)
 - `--chat-id` — override the env var for this call
 - `--token` — override the env var for this call
 
-Exit codes: 0 = message received, 2 = timeout.
+On timeout the script exits 0 and outputs a continuation prompt. Read stdout
+and follow its instructions — pick reasonable defaults, document assumptions,
+and keep going.
 
 ### When to use this
 

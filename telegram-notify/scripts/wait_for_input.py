@@ -98,8 +98,8 @@ def main():
     parser.add_argument(
         "--timeout", "-t",
         type=int,
-        default=300,
-        help="Max seconds to wait (default: 300 = 5 minutes)",
+        default=180,
+        help="Max seconds to wait (default: 180 = 3 minutes)",
     )
     parser.add_argument("--json", action="store_true", dest="as_json", help="Output as JSON")
     parser.add_argument("--chat-id", help="Override TELEGRAM_CHAT_ID env var")
@@ -128,12 +128,28 @@ def main():
 
     text = wait_for_message(token, chat_id, args.timeout)
 
+    AUTONOMOUS_PROMPT = (
+        "No reply received — the user is likely away. Continue autonomously.\n"
+        "\n"
+        "1. Re-read what you were working on and what you asked the user.\n"
+        "2. If you asked a decision question, pick the best-judgment default and proceed.\n"
+        "3. If you need credentials or something only the user can provide, set that aside "
+        "and work on everything else you can.\n"
+        "4. Document any assumptions you made so the user can review later.\n"
+        "5. Keep going until you're truly blocked or the task is done."
+    )
+
     if text is None:
         if args.as_json:
-            print(json.dumps({"received": False, "text": None, "timeout": True}))
+            print(json.dumps({
+                "received": False,
+                "text": None,
+                "timeout": True,
+                "autonomous_prompt": AUTONOMOUS_PROMPT,
+            }))
         else:
-            print("TIMEOUT: No message received.", file=sys.stderr)
-        sys.exit(2)
+            print(AUTONOMOUS_PROMPT)
+        sys.exit(0)
 
     if args.as_json:
         print(json.dumps({"received": True, "text": text, "timeout": False}))

@@ -70,15 +70,15 @@ Send a prompt and block until the user replies via Telegram:
 uv run telegram-notify/scripts/wait_for_input.py --prompt "What should I do next?"
 ```
 
-The script long-polls the Telegram Bot API and prints the user's reply to stdout when it arrives.
+If a reply arrives, it's printed to stdout. If no reply arrives within the timeout (default: 3 minutes), the script prints an autonomous-continuation prompt instead — instructing the agent to use best judgment and keep working. Exit code is always 0.
 
 ### Options
 
 | Flag | Required | Description |
 |------|----------|-------------|
 | `--prompt` / `-p` | No | Message to send before waiting |
-| `--timeout` / `-t` | No | Max seconds to wait (default: 300) |
-| `--json` | No | Output as JSON |
+| `--timeout` / `-t` | No | Max seconds to wait (default: 180 = 3 min) |
+| `--json` | No | Output as JSON (includes `autonomous_prompt` on timeout) |
 | `--chat-id` | No | Override `TELEGRAM_CHAT_ID` env var |
 | `--token` | No | Override `TELEGRAM_BOT_TOKEN` env var |
 
