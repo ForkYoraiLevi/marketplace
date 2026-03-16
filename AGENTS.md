@@ -82,13 +82,9 @@ Run the CI workflow locally with [act](https://github.com/nektos/act) and podman
 ./tests/run-ci-local.sh -n       # dry-run (no container)
 ```
 
-## Verify Your Work
+## Marketplace Testing
 
-- Run the code. Execute the script. If it produces output, inspect it.
-- Do NOT claim something works without running it.
-- Always run `uv run tests/test_marketplace.py` before declaring done.
-- If you need credentials to test, build everything first, then ask for all needed credentials at once.
-- Clearly state what was tested and what remains untested.
+Always run `uv run tests/test_marketplace.py` before declaring done.
 
 ## Writing Rules — Keep Them Concise
 
