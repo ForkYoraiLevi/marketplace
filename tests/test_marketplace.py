@@ -1383,6 +1383,193 @@ class TestRuleUninstallEdgeCases(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------- #
+# Test: Install script safety — context bloat prevention
+# --------------------------------------------------------------------------- #
+
+
+class TestInstallScriptSafety(unittest.TestCase):
+    """Tests for install-rule.sh safety features: bloat warnings,
+    idempotency, scope collision detection, and input validation."""
+
+    def test_format_all_prints_bloat_warning(self):
+        """--format all should print a warning about context duplication."""
+        rule = RULES[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env = os.environ.copy()
+            env["HOME"] = tmpdir
+            result = subprocess.run(
+                [str(rule / "install.sh"), "--global", "--format", "all"],
+                capture_output=True, text=True, timeout=10, env=env,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("Warning", result.stdout)
+            self.assertIn("multiple times", result.stdout)
+
+    def test_format_agents_no_bloat_warning(self):
+        """Default --format agents should NOT print a bloat warning."""
+        rule = RULES[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env = os.environ.copy()
+            env["HOME"] = tmpdir
+            result = subprocess.run(
+                [str(rule / "install.sh"), "--global"],
+                capture_output=True, text=True, timeout=10, env=env,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertNotIn("Warning", result.stdout)
+
+    def test_windsurf_format_idempotent(self):
+        """Installing Windsurf format twice should skip on second run."""
+        rule = RULES[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env = os.environ.copy()
+            env["HOME"] = tmpdir
+            for _ in range(2):
+                subprocess.run(
+                    [str(rule / "install.sh"), "--global", "--format", "windsurf"],
+                    capture_output=True, text=True, timeout=10, env=env,
+                )
+            result = subprocess.run(
+                [str(rule / "install.sh"), "--global", "--format", "windsurf"],
+                capture_output=True, text=True, timeout=10, env=env,
+            )
+            self.assertIn("already up to date", result.stdout)
+
+    def test_cursor_format_idempotent(self):
+        """Installing Cursor format twice should skip on second run."""
+        rule = RULES[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env = os.environ.copy()
+            env["HOME"] = tmpdir
+            subprocess.run(
+                [str(rule / "install.sh"), "--global", "--format", "cursor"],
+                capture_output=True, text=True, timeout=10, env=env,
+            )
+            result = subprocess.run(
+                [str(rule / "install.sh"), "--global", "--format", "cursor"],
+                capture_output=True, text=True, timeout=10, env=env,
+            )
+            self.assertIn("already up to date", result.stdout)
+
+    def test_scope_collision_warns_when_both_scopes_installed(self):
+        """Installing globally when project-level exists should print a note."""
+        rule = RULES[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env = os.environ.copy()
+            env["HOME"] = tmpdir
+            # Install at project scope first
+            subprocess.run(
+                [str(rule / "install.sh"), "--format", "agents"],
+                capture_output=True, text=True, timeout=10, env=env, cwd=tmpdir,
+            )
+            # Now install at global scope — should detect project-level copy
+            result = subprocess.run(
+                [str(rule / "install.sh"), "--global", "--format", "agents"],
+                capture_output=True, text=True, timeout=10, env=env, cwd=tmpdir,
+            )
+            self.assertIn("also installed", result.stdout)
+
+    def test_help_documents_format_all_risk(self):
+        """--help should mention the bloat risk of --format all."""
+        rule = RULES[0]
+        result = subprocess.run(
+            [str(rule / "install.sh"), "--help"],
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertIn("WARNING", result.stdout)
+        self.assertIn("duplicate", result.stdout.lower())
+
+
+class TestInstallPySafety(unittest.TestCase):
+    """Tests for install.py safety features: accurate detection,
+    no leading newline, and format idempotency."""
+
+    def _get_funcs(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_rule, is_rule_installed
+            return install_rule, is_rule_installed
+        finally:
+            sys.path.pop(0)
+
+    def test_is_rule_installed_detects_all_rules_correctly(self):
+        """is_rule_installed should detect every rule after install —
+        verifies the .title() fix for 'No AI Credit', 'Python UV', etc."""
+        install_rule, is_rule_installed = self._get_funcs()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            for rule in RULES:
+                rule_dict = {"name": rule.name, "path": rule}
+                install_rule(rule_dict, "devin", paths)
+            # Now check that every rule is detected as installed
+            for rule in RULES:
+                with self.subTest(rule=rule.name):
+                    self.assertTrue(
+                        is_rule_installed("devin", rule.name, paths),
+                        f"is_rule_installed failed to detect '{rule.name}' "
+                        f"— likely heading mismatch",
+                    )
+
+    def test_new_agents_file_has_no_leading_newline(self):
+        """Installing into a non-existent AGENTS.md should not start with \\n."""
+        install_rule, _ = self._get_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            install_rule(rule_dict, "devin", paths)
+            content = target.read_text()
+            self.assertFalse(
+                content.startswith("\n"),
+                "New AGENTS.md should not start with a blank line",
+            )
+
+    def test_existing_agents_file_gets_separator_newline(self):
+        """Appending to an existing AGENTS.md should add a separator newline."""
+        install_rule, _ = self._get_funcs()
+        if len(RULES) < 2:
+            self.skipTest("Need at least 2 rules")
+        rule_a = {"name": RULES[0].name, "path": RULES[0]}
+        rule_b = {"name": RULES[1].name, "path": RULES[1]}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            install_rule(rule_a, "devin", paths)
+            install_rule(rule_b, "devin", paths)
+            content = target.read_text()
+            # Should not have double blank lines between rules
+            self.assertNotIn("\n\n\n", content)
+
+    def test_cursor_format_idempotent_in_install_py(self):
+        """install_rule for cursor format should return 'already installed'
+        when file content matches."""
+        install_rule, _ = self._get_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "rules"
+            paths = {"rules": target}
+            install_rule(rule_dict, "cursor", paths)
+            result = install_rule(rule_dict, "cursor", paths)
+            self.assertEqual(result, "already installed")
+
+    def test_windsurf_format_idempotent_in_install_py(self):
+        """install_rule for windsurf format should return 'already installed'
+        when file content matches."""
+        install_rule, _ = self._get_funcs()
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "rules"
+            paths = {"rules": target}
+            install_rule(rule_dict, "windsurf", paths)
+            result = install_rule(rule_dict, "windsurf", paths)
+            self.assertEqual(result, "already installed")
+
+
+# --------------------------------------------------------------------------- #
 # Entry point
 # --------------------------------------------------------------------------- #
 
