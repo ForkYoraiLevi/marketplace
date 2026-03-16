@@ -30,7 +30,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Directories that are NOT items (skills or rules)
-EXCLUDED_DIRS = {"docs", "_template", ".git", ".github", "tests", "scripts", "__pycache__"}
+EXCLUDED_DIRS = {"docs", "_template", ".git", ".github", "tests", "scripts", "__pycache__", "research"}
 
 # --------------------------------------------------------------------------- #
 # Helpers
