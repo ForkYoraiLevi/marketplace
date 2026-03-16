@@ -186,9 +186,14 @@ def is_rule_installed(pid: str, rule_name: str, paths: dict) -> bool:
         # Rules appended to a single file
         if target.exists():
             content = target.read_text()
-            # Check for the rule's heading
-            rule_heading = rule_name.replace("-", " ").title()
-            return rule_heading in content or f"## {rule_heading}" in content
+            # Read actual heading from rule.md instead of guessing from dir name
+            rule_path = find_marketplace() / rule_name / "rule.md"
+            if rule_path.exists():
+                for line in rule_path.read_text().splitlines():
+                    if line.startswith("## "):
+                        return line[3:].strip() in content
+            # Fallback: check if dir name appears in any ## heading
+            return f"## {rule_name}" in content.lower().replace(" ", "-")
         return False
     else:
         # Rules as separate .md files in a directory
@@ -292,14 +297,21 @@ def install_rule(rule: dict, pid: str, paths: dict) -> str:
             return "already installed"
         target.parent.mkdir(parents=True, exist_ok=True)
         with open(target, "a") as f:
-            f.write("\n" + content)
+            # Only add separator newline if file already has content
+            if target.exists() and target.stat().st_size > 0:
+                f.write("\n")
+            f.write(content)
         return "installed"
     else:
         src = rule["path"] / "formats" / f"{fmt}.md"
         if not src.exists():
             return f"no {fmt} format"
         target.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, target / f"{rule['name']}.md")
+        dest = target / f"{rule['name']}.md"
+        # Skip if already identical
+        if dest.exists() and dest.read_text() == src.read_text():
+            return "already installed"
+        shutil.copy2(src, dest)
         return "installed"
 
 
@@ -449,6 +461,22 @@ def main():
     if not platform_choices:
         console.print("[yellow]Cancelled.[/yellow]")
         return
+
+    if len(platform_choices) > 1 and mode == "install":
+        # Check if multiple platforms would write rules the same agent reads
+        agents_fmts = [pid for pid in platform_choices if PLATFORMS[pid]["rule_fmt"] == "agents"]
+        if len(agents_fmts) > 1:
+            labels = ", ".join(PLATFORMS[p]["label"] for p in agents_fmts)
+            console.print(f"[yellow]Note:[/yellow] {labels} all use AGENTS.md format — "
+                          "rules will be appended to separate files, no duplication.")
+        else:
+            console.print(
+                f"[yellow]Note:[/yellow] Installing to {len(platform_choices)} platforms. "
+                "If your agent reads from multiple sources (e.g. Devin reads AGENTS.md + "
+                ".windsurf/ + .cursor/), rules may appear multiple times in context. "
+                "Consider installing to one platform only."
+            )
+        console.print()
 
     # ── Scan marketplace ──
     marketplace = find_marketplace()

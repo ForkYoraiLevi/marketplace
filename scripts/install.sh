@@ -40,7 +40,11 @@ ensure_uv() {
     if command_exists uv; then
         return
     fi
-    info "Installing uv..."
+    info "uv (Python package manager) is required but not installed."
+    info "It will be installed from https://astral.sh/uv/install.sh"
+    echo ""
+    # When piped (curl | bash), stdin is the pipe — cannot prompt interactively.
+    # Just inform the user and proceed.
     if command_exists curl; then
         curl -LsSf https://astral.sh/uv/install.sh | sh
     elif command_exists wget; then
