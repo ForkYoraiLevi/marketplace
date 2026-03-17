@@ -14,6 +14,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [continuous-improvement](./continuous-improvement/) | Structured seven-phase workflow for finding, planning, and implementing codebase improvements |
 | [document-lifecycle](./document-lifecycle/) | Three-tier documentation: rules, reference, history — no sprawl |
 | [document-progress](./document-progress/) | Write progress to disk using todo lists and HANDOFF.md so nothing is lost between sessions |
+| [improve-the-process](./improve-the-process/) | Fix friction structurally — every session should improve the workflow |
 | [no-ai-credit](./no-ai-credit/) | Prevent AI agents from adding self-attribution to any output |
 | [prior-art](./prior-art/) | Search for existing solutions before building custom code |
 | [python-uv](./python-uv/) | Use uv for all Python operations — never pip, venv, conda, or poetry |
