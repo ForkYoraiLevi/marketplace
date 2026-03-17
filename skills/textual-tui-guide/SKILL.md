@@ -323,15 +323,13 @@ For TUIs that manage selectable items with metadata:
                selected_mcps.append(val.split(":", 1)[1])
    ```
 
-## Reference implementation
+## Reference
 
-For a complete working example (1200+ lines), read the marketplace installer:
+For a complete annotated cookbook with production-tested patterns (CSS reference, modal patterns, event handling, full app lifecycle), read the bundled reference:
 
 ```
 @skills/textual-tui-guide/references/patterns.md
 ```
-
-This covers the full pattern: data model, multi-panel layout, collapsible categories, modal dialogs, selection management, installation logic, and status tracking.
 
 ## Common pitfalls
 

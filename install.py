@@ -739,6 +739,14 @@ def main():
     from textual.widgets.selection_list import Selection
     from rich.text import Text
 
+    # Free up Space on CollapsibleTitle for section-level selection toggle.
+    # Enter still collapses/expands.
+    try:
+        from textual.widgets._collapsible import CollapsibleTitle
+        CollapsibleTitle.BINDINGS = [Binding("enter", "toggle", "Toggle")]
+    except ImportError:
+        pass
+
     parser = argparse.ArgumentParser(description="Marketplace interactive installer")
     parser.add_argument("--global", dest="scope", action="store_const", const="global", default="global")
     parser.add_argument("--project", dest="scope", action="store_const", const="project")
@@ -851,6 +859,7 @@ def main():
             Binding("i", "do_install", f"{mode_verb}"),
             Binding("a", "select_all", "All"),
             Binding("n", "select_none", "None"),
+            Binding("space", "toggle_section", "Toggle", show=False),
         ]
 
         def __init__(self):
@@ -871,7 +880,10 @@ def main():
                         "[dim]Navigate to any item and press "
                         "[bold]P[/bold] to show its full content.\n\n"
                         "Use [bold]Space[/bold] to toggle selections.\n"
+                        "Use [bold]Space[/bold] on a section header to\n"
+                        "toggle all items in that group.\n"
                         "Use [bold]Tab[/bold] to move between sections.\n"
+                        "Use [bold]Enter[/bold] to collapse/expand.\n"
                         "Use [bold]I[/bold] to install selected items.[/dim]",
                         id="preview-body",
                     )
@@ -897,9 +909,10 @@ def main():
             for pid, info in platforms.items():
                 cfg = info[scope]["config"]
                 detected = cfg.exists()
-                status = "[green]\u2713 config found[/]" if detected else "[dim]dir exists[/]"
+                indicator = "[green]\u25cf[/] " if detected else "[dim]\u25cb[/] "
+                status = "[green]config found[/]" if detected else "[dim]dir exists[/]"
                 label = Text.from_markup(
-                    f"[bold]{info['label']}[/]  {status}"
+                    f"{indicator}[bold]{info['label']}[/]  {status}"
                 )
                 plat_selections.append(
                     Selection(label, pid, initial_state=True)
@@ -920,9 +933,9 @@ def main():
             mcp_selections = []
             for name, srv in MCP_SERVERS.items():
                 is_inst = name in primary_mcps
-                status = " [green]\u2713[/]" if is_inst else ""
+                indicator = "[green]\u25cf[/] " if is_inst else "[dim]\u25cb[/] "
                 label = Text.from_markup(
-                    f"[bold]{name}[/]{status}  [dim]{srv['description']}[/]"
+                    f"{indicator}[bold]{name}[/]  [dim]{srv['description']}[/]"
                 )
                 default_checked = (not is_inst) if install_mode else is_inst
                 mcp_selections.append(
@@ -957,9 +970,9 @@ def main():
                     family_selections = []
                     for item in fdata["items"]:
                         is_inst = is_rule_installed(primary_pid, item["name"], primary_paths)
-                        status = " [green]\u2713[/]" if is_inst else ""
+                        indicator = "[green]\u25cf[/] " if is_inst else "[dim]\u25cb[/] "
                         label = Text.from_markup(
-                            f"[bold]{item['name']}[/]{status}  [dim]{item['description']}[/]"
+                            f"{indicator}[bold]{item['name']}[/]  [dim]{item['description']}[/]"
                         )
                         default_checked = (not is_inst) if install_mode else is_inst
                         if default_checked:
@@ -999,9 +1012,9 @@ def main():
                     family_selections = []
                     for item in fdata["items"]:
                         is_inst = is_skill_installed(item["name"], primary_paths)
-                        status = " [green]\u2713[/]" if is_inst else ""
+                        indicator = "[green]\u25cf[/] " if is_inst else "[dim]\u25cb[/] "
                         label = Text.from_markup(
-                            f"[bold]{item['name']}[/]{status}  [dim]{item['description']}[/]"
+                            f"{indicator}[bold]{item['name']}[/]  [dim]{item['description']}[/]"
                         )
                         if install_mode:
                             default_checked = False if item["name"] in SKILLS_DISABLED_BY_DEFAULT else (not is_inst)
@@ -1122,17 +1135,60 @@ def main():
                 content = f"# {name}\n\n{meta.get('description', '')}"
             self.push_screen(PreviewScreen(name, content))
 
-        def action_select_all(self) -> None:
+        def _selection_lists_in_scope(self) -> list:
+            """Get SelectionLists based on what's focused.
+
+            - Focused on a SelectionList → just that list
+            - Focused on a CollapsibleTitle → all lists inside that Collapsible
+            - Otherwise → empty
+            """
             focused = self.focused
             if isinstance(focused, SelectionList):
-                focused.select_all()
-                self._update_status_bar()
+                return [focused]
+            if focused is not None and type(focused).__name__ == "CollapsibleTitle":
+                parent = focused.parent
+                if parent is not None and isinstance(parent, Collapsible):
+                    try:
+                        return list(parent.query(SelectionList))
+                    except Exception:
+                        pass
+            return []
+
+        def action_select_all(self) -> None:
+            for sl in self._selection_lists_in_scope():
+                sl.select_all()
+            self._update_status_bar()
 
         def action_select_none(self) -> None:
+            for sl in self._selection_lists_in_scope():
+                sl.deselect_all()
+            self._update_status_bar()
+
+        def action_toggle_section(self) -> None:
+            """Space on a CollapsibleTitle toggles all selections in it."""
             focused = self.focused
-            if isinstance(focused, SelectionList):
-                focused.deselect_all()
-                self._update_status_bar()
+            if focused is None:
+                return
+            if type(focused).__name__ != "CollapsibleTitle":
+                return
+            parent = focused.parent
+            if parent is None or not isinstance(parent, Collapsible):
+                return
+            try:
+                sls = list(parent.query(SelectionList))
+            except Exception:
+                return
+            if not sls:
+                return
+            all_selected = all(
+                len(sl.selected) == sl.option_count for sl in sls
+            )
+            for sl in sls:
+                if all_selected:
+                    sl.deselect_all()
+                else:
+                    sl.select_all()
+            self._update_status_bar()
 
         def action_do_install(self) -> None:
             """Gather selections and show confirmation."""
