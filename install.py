@@ -171,6 +171,9 @@ SKILL_FAMILIES = {
     },
 }
 
+# Skills unchecked by default in install mode (require API keys or complex setup)
+SKILLS_DISABLED_BY_DEFAULT = {"web-scraper", "expose-port", "gemini-chat", "google-drive-reader"}
+
 
 # ── Detection Helpers ───────────────────────────────────────────────────────
 
@@ -469,12 +472,6 @@ Screen {
     background: $surface;
 }
 
-.section-header {
-    text-style: bold;
-    padding: 0;
-    margin: 1 0 0 0;
-}
-
 SelectionList {
     height: auto;
     max-height: 20;
@@ -527,6 +524,41 @@ CollapsibleTitle:hover {
 CollapsibleTitle:focus {
     color: $primary;
     text-style: bold;
+}
+
+Collapsible.section-collapsible {
+    padding: 0;
+    margin: 1 0 0 0;
+}
+
+Collapsible.section-collapsible > CollapsibleTitle {
+    text-style: bold;
+    padding: 0;
+    background: transparent;
+}
+
+#section-platforms > CollapsibleTitle {
+    color: dodgerblue;
+}
+
+#section-mcps > CollapsibleTitle {
+    color: red;
+}
+
+#section-rules > CollapsibleTitle {
+    color: yellow;
+}
+
+#section-skills > CollapsibleTitle {
+    color: mediumpurple;
+}
+
+Collapsible.section-collapsible > CollapsibleTitle:hover {
+    text-style: bold;
+}
+
+Collapsible.section-collapsible > CollapsibleTitle:focus {
+    text-style: bold reverse;
 }
 
 #preview-body {
@@ -861,10 +893,6 @@ def main():
         def _build_left_panel(self):
             """Generator helper that yields all widgets for the left panel."""
             # ── Platforms ──
-            yield Static(
-                "[bold dodger_blue2]\u2588\u2588 PLATFORMS[/]",
-                classes="section-header",
-            )
             plat_selections = []
             for pid, info in platforms.items():
                 cfg = info[scope]["config"]
@@ -880,14 +908,15 @@ def main():
                     "type": "platform", "name": info["label"],
                     "description": f"Config: {cfg}\nDetected: {'yes' if detected else 'no'}",
                 }
-            yield SelectionList(*plat_selections, id="sl-platforms")
+            with Collapsible(
+                title="\u2588\u2588 PLATFORMS",
+                collapsed=False,
+                id="section-platforms",
+                classes="section-collapsible",
+            ):
+                yield SelectionList(*plat_selections, id="sl-platforms")
 
             # ── MCP Servers ──
-            yield Static(
-                "[bold red]\u2588\u2588 MCP SERVERS[/]  "
-                "[dim]External tool connections[/]",
-                classes="section-header",
-            )
             mcp_selections = []
             for name, srv in MCP_SERVERS.items():
                 is_inst = name in primary_mcps
@@ -905,88 +934,99 @@ def main():
                     "installed": is_inst,
                     "config": json.dumps(srv["config"], indent=2),
                 }
-            yield SelectionList(*mcp_selections, id="sl-mcps")
+            with Collapsible(
+                title="\u2588\u2588 MCP SERVERS  \u2014  External tool connections",
+                collapsed=False,
+                id="section-mcps",
+                classes="section-collapsible",
+            ):
+                yield SelectionList(*mcp_selections, id="sl-mcps")
 
             # ── Rules ──
-            yield Static(
-                "[bold yellow]\u2588\u2588 RULES[/]  "
-                "[dim]Always-on agent behaviors[/]",
-                classes="section-header",
-            )
-            for fname, fdata in rule_families.items():
-                if not fdata["items"]:
-                    continue
-                icon = fdata.get("icon", "\u2022")
-                sel_count = 0
-                family_selections = []
-                for item in fdata["items"]:
-                    is_inst = is_rule_installed(primary_pid, item["name"], primary_paths)
-                    status = " [green]\u2713[/]" if is_inst else ""
-                    label = Text.from_markup(
-                        f"[bold]{item['name']}[/]{status}  [dim]{item['description']}[/]"
-                    )
-                    default_checked = (not is_inst) if install_mode else is_inst
-                    if default_checked:
-                        sel_count += 1
-                    family_selections.append(
-                        Selection(label, f"rule:{item['name']}", initial_state=default_checked)
-                    )
-                    self._item_metadata[f"rule:{item['name']}"] = {
-                        "type": "rule", "name": item["name"],
-                        "description": item["description"],
-                        "installed": is_inst,
-                        "formats": item.get("formats", []),
-                        "path": item["path"],
-                    }
-                slug = fname.lower().replace(" ", "-").replace("&", "and")
-                with Collapsible(
-                    title=f"{icon}  {fname}  \u2014  {fdata['description']}  ({sel_count}/{len(fdata['items'])})",
-                    collapsed=False,
-                ):
-                    yield SelectionList(
-                        *family_selections,
-                        id=f"sl-rules-{slug}",
-                    )
+            with Collapsible(
+                title="\u2588\u2588 RULES  \u2014  Always-on agent behaviors",
+                collapsed=False,
+                id="section-rules",
+                classes="section-collapsible",
+            ):
+                for fname, fdata in rule_families.items():
+                    if not fdata["items"]:
+                        continue
+                    icon = fdata.get("icon", "\u2022")
+                    sel_count = 0
+                    family_selections = []
+                    for item in fdata["items"]:
+                        is_inst = is_rule_installed(primary_pid, item["name"], primary_paths)
+                        status = " [green]\u2713[/]" if is_inst else ""
+                        label = Text.from_markup(
+                            f"[bold]{item['name']}[/]{status}  [dim]{item['description']}[/]"
+                        )
+                        default_checked = (not is_inst) if install_mode else is_inst
+                        if default_checked:
+                            sel_count += 1
+                        family_selections.append(
+                            Selection(label, f"rule:{item['name']}", initial_state=default_checked)
+                        )
+                        self._item_metadata[f"rule:{item['name']}"] = {
+                            "type": "rule", "name": item["name"],
+                            "description": item["description"],
+                            "installed": is_inst,
+                            "formats": item.get("formats", []),
+                            "path": item["path"],
+                        }
+                    slug = fname.lower().replace(" ", "-").replace("&", "and")
+                    with Collapsible(
+                        title=f"{icon}  {fname}  \u2014  {fdata['description']}  ({sel_count}/{len(fdata['items'])})",
+                        collapsed=False,
+                    ):
+                        yield SelectionList(
+                            *family_selections,
+                            id=f"sl-rules-{slug}",
+                        )
 
             # ── Skills ──
-            yield Static(
-                "[bold medium_purple1]\u2588\u2588 SKILLS[/]  "
-                "[dim]On-demand /skill-name commands[/]",
-                classes="section-header",
-            )
-            for fname, fdata in skill_families.items():
-                if not fdata["items"]:
-                    continue
-                icon = fdata.get("icon", "\u2022")
-                sel_count = 0
-                family_selections = []
-                for item in fdata["items"]:
-                    is_inst = is_skill_installed(item["name"], primary_paths)
-                    status = " [green]\u2713[/]" if is_inst else ""
-                    label = Text.from_markup(
-                        f"[bold]{item['name']}[/]{status}  [dim]{item['description']}[/]"
-                    )
-                    default_checked = (not is_inst) if install_mode else is_inst
-                    if default_checked:
-                        sel_count += 1
-                    family_selections.append(
-                        Selection(label, f"skill:{item['name']}", initial_state=default_checked)
-                    )
-                    self._item_metadata[f"skill:{item['name']}"] = {
-                        "type": "skill", "name": item["name"],
-                        "description": item["description"],
-                        "installed": is_inst,
-                        "path": item["path"],
-                    }
-                slug = fname.lower().replace(" ", "-").replace("&", "and")
-                with Collapsible(
-                    title=f"{icon}  {fname}  \u2014  {fdata['description']}  ({sel_count}/{len(fdata['items'])})",
-                    collapsed=False,
-                ):
-                    yield SelectionList(
-                        *family_selections,
-                        id=f"sl-skills-{slug}",
-                    )
+            with Collapsible(
+                title="\u2588\u2588 SKILLS  \u2014  On-demand /skill-name commands",
+                collapsed=False,
+                id="section-skills",
+                classes="section-collapsible",
+            ):
+                for fname, fdata in skill_families.items():
+                    if not fdata["items"]:
+                        continue
+                    icon = fdata.get("icon", "\u2022")
+                    sel_count = 0
+                    family_selections = []
+                    for item in fdata["items"]:
+                        is_inst = is_skill_installed(item["name"], primary_paths)
+                        status = " [green]\u2713[/]" if is_inst else ""
+                        label = Text.from_markup(
+                            f"[bold]{item['name']}[/]{status}  [dim]{item['description']}[/]"
+                        )
+                        if install_mode:
+                            default_checked = False if item["name"] in SKILLS_DISABLED_BY_DEFAULT else (not is_inst)
+                        else:
+                            default_checked = is_inst
+                        if default_checked:
+                            sel_count += 1
+                        family_selections.append(
+                            Selection(label, f"skill:{item['name']}", initial_state=default_checked)
+                        )
+                        self._item_metadata[f"skill:{item['name']}"] = {
+                            "type": "skill", "name": item["name"],
+                            "description": item["description"],
+                            "installed": is_inst,
+                            "path": item["path"],
+                        }
+                    slug = fname.lower().replace(" ", "-").replace("&", "and")
+                    with Collapsible(
+                        title=f"{icon}  {fname}  \u2014  {fdata['description']}  ({sel_count}/{len(fdata['items'])})",
+                        collapsed=False,
+                    ):
+                        yield SelectionList(
+                            *family_selections,
+                            id=f"sl-skills-{slug}",
+                        )
 
         def _get_all_selection_lists(self) -> list:
             """Get all SelectionList widgets."""
