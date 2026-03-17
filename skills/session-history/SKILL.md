@@ -28,44 +28,44 @@ search for topics discussed, and review what was done in previous sessions.
 ### List recent sessions
 
 ```
-uv run session-history/scripts/query_sessions.py list
-uv run session-history/scripts/query_sessions.py list -n 10
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py list
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py list -n 10
 ```
 
 ### Search across all conversations
 
 ```
-uv run session-history/scripts/query_sessions.py search "terraform"
-uv run session-history/scripts/query_sessions.py search "API key" --role user
-uv run session-history/scripts/query_sessions.py search "docker" -n 10
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py search "terraform"
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py search "API key" --role user
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py search "docker" -n 10
 ```
 
 ### Read a full conversation
 
 ```
-uv run session-history/scripts/query_sessions.py read <session-id>
-uv run session-history/scripts/query_sessions.py read <partial-id>
-uv run session-history/scripts/query_sessions.py read <id> --max-length 5000
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py read <session-id>
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py read <partial-id>
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py read <id> --max-length 5000
 ```
 
 ### Show database statistics
 
 ```
-uv run session-history/scripts/query_sessions.py stats
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py stats
 ```
 
 ### List recent user prompts
 
 ```
-uv run session-history/scripts/query_sessions.py prompts
-uv run session-history/scripts/query_sessions.py prompts "terraform" -n 10
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py prompts
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py prompts "terraform" -n 10
 ```
 
 ### JSON output (all commands)
 
 ```
-uv run session-history/scripts/query_sessions.py --json search "query"
-uv run session-history/scripts/query_sessions.py --json stats
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py --json search "query"
+uv run ~/.config/cognition/skills/session-history/scripts/query_sessions.py --json stats
 ```
 
 ## Instructions

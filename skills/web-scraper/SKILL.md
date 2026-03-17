@@ -20,7 +20,7 @@ Fetch a web page and return its main content, stripped of navigation, ads, scrip
 ## Step 1: Fetch and extract
 
 ```
-uv run web-scraper/scripts/scrape.py "$1"
+uv run ~/.config/cognition/skills/web-scraper/scripts/scrape.py "$1"
 ```
 
 ### Options

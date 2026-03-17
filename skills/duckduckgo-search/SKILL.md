@@ -24,7 +24,7 @@ The **web-scraper** skill must be installed alongside this skill (used in Step 3
 ## Usage
 
 ```
-uv run duckduckgo-search/scripts/search.py <query> [options]
+uv run ~/.config/cognition/skills/duckduckgo-search/scripts/search.py <query> [options]
 ```
 
 ### Options
@@ -43,7 +43,7 @@ uv run duckduckgo-search/scripts/search.py <query> [options]
 Run the search with `-n 20` to get a broad set of results:
 
 ```
-uv run duckduckgo-search/scripts/search.py <query> -n 20
+uv run ~/.config/cognition/skills/duckduckgo-search/scripts/search.py <query> -n 20
 ```
 
 ### Step 2: Triage — pick which results to scrape
@@ -62,7 +62,7 @@ You now have 20 titles, URLs, and snippets. **Do not scrape all 20.** Read the t
 Use the `web-scraper` skill to fetch the full content of each selected result. **Scrape all selected pages in parallel** — do not scrape them one at a time.
 
 ```
-uv run web-scraper/scripts/scrape.py "<url>"
+uv run ~/.config/cognition/skills/web-scraper/scripts/scrape.py "<url>"
 ```
 
 ### Step 4: Synthesize

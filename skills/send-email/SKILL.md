@@ -34,7 +34,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 Run the script from the skill directory:
 
 ```
-uv run send-email/scripts/send_email.py --to "recipient@example.com" --subject "Subject line" --body "Email body text"
+uv run ~/.config/cognition/skills/send-email/scripts/send_email.py --to "recipient@example.com" --subject "Subject line" --body "Email body text"
 ```
 
 ### Options
@@ -48,7 +48,7 @@ uv run send-email/scripts/send_email.py --to "recipient@example.com" --subject "
 ### Multiple recipients
 
 ```
-uv run send-email/scripts/send_email.py --to "a@example.com" "b@example.com" --subject "Hello" --body "Hi everyone!"
+uv run ~/.config/cognition/skills/send-email/scripts/send_email.py --to "a@example.com" "b@example.com" --subject "Hello" --body "Hi everyone!"
 ```
 
 ## Instructions

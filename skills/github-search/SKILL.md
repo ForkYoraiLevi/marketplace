@@ -21,7 +21,7 @@ Search GitHub for existing projects, libraries, and implementations relevant to 
 ## Usage
 
 ```
-uv run github-search/scripts/search.py <query> [options]
+uv run ~/.config/cognition/skills/github-search/scripts/search.py <query> [options]
 ```
 
 ### Options
@@ -50,7 +50,7 @@ Invoke this skill **before implementing any non-trivial feature**. If you're abo
 Run the search with the core concept you're about to implement. Frame the query around **what it does**, not what you're building:
 
 ```
-uv run github-search/scripts/search.py "websocket server framework" -l python
+uv run ~/.config/cognition/skills/github-search/scripts/search.py "websocket server framework" -l python
 ```
 
 If results are sparse, try:

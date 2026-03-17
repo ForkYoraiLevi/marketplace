@@ -20,4 +20,4 @@ The todo list is the definition of completeness. Before stopping, check it.
 - About to ask a question you could answer by searching? **Search first.**
 
 ### If unsure whether you're done:
-Run `uv run motivation/scripts/motivate.py` — it checks git, HANDOFF.md, build, and tests, then reports what's objectively incomplete.
+Invoke `/motivation` — it checks git, HANDOFF.md, build, and tests, then reports what's objectively incomplete.

@@ -45,15 +45,15 @@ instruct the user to re-run the setup wizard.
 ### List documents
 
 ```
-uv run google-drive-reader/scripts/read_drive_doc.py --list
-uv run google-drive-reader/scripts/read_drive_doc.py --list --query "quarterly report"
+uv run ~/.config/cognition/skills/google-drive-reader/scripts/read_drive_doc.py --list
+uv run ~/.config/cognition/skills/google-drive-reader/scripts/read_drive_doc.py --list --query "quarterly report"
 ```
 
 ### Read a document (extract URLs and conclusions)
 
 ```
-uv run google-drive-reader/scripts/read_drive_doc.py <doc-id-or-url>
-uv run google-drive-reader/scripts/read_drive_doc.py "https://docs.google.com/document/d/1abc.../edit"
+uv run ~/.config/cognition/skills/google-drive-reader/scripts/read_drive_doc.py <doc-id-or-url>
+uv run ~/.config/cognition/skills/google-drive-reader/scripts/read_drive_doc.py "https://docs.google.com/document/d/1abc.../edit"
 ```
 
 ### Options
@@ -76,12 +76,12 @@ When the user asks you to read a Google Doc, follow these steps:
 
 1. If the user provides a document URL or ID, read it directly:
    ```
-   uv run google-drive-reader/scripts/read_drive_doc.py "<url-or-id>"
+   uv run ~/.config/cognition/skills/google-drive-reader/scripts/read_drive_doc.py "<url-or-id>"
    ```
 
 2. If the user asks to find a document by name, list and search first:
    ```
-   uv run google-drive-reader/scripts/read_drive_doc.py --list --query "<search terms>"
+   uv run ~/.config/cognition/skills/google-drive-reader/scripts/read_drive_doc.py --list --query "<search terms>"
    ```
    Then read the matching document by its ID.
 
@@ -90,7 +90,7 @@ When the user asks you to read a Google Doc, follow these steps:
 4. To save output to a file with a unique name (avoids conflicts when multiple
    agents fetch concurrently), add `--output`:
    ```
-   uv run google-drive-reader/scripts/read_drive_doc.py "<url-or-id>" --json --output
+   uv run ~/.config/cognition/skills/google-drive-reader/scripts/read_drive_doc.py "<url-or-id>" --json --output
    ```
    The script prints the generated file path to stdout. Read that file for the
    content. You can also pass a specific path: `--output /tmp/my-file.json`.

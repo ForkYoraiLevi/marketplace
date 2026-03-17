@@ -34,7 +34,7 @@ No API keys or environment variables are required.
 ## Usage
 
 ```
-uv run structured-handoff/scripts/generate_handoff.py --task "TASK_DESCRIPTION" [--dir OUTPUT_DIR] [--num-tasks N]
+uv run ~/.config/cognition/skills/structured-handoff/scripts/generate_handoff.py --task "TASK_DESCRIPTION" [--dir OUTPUT_DIR] [--num-tasks N]
 ```
 
 ### Options
@@ -48,7 +48,7 @@ uv run structured-handoff/scripts/generate_handoff.py --task "TASK_DESCRIPTION" 
 1. Parse the user's request to extract the task description and any preferences for output directory or number of tasks.
 2. Run the generate command:
    ```
-   uv run structured-handoff/scripts/generate_handoff.py --task "USER_TASK" --dir ".tasks" --num-tasks 5
+   uv run ~/.config/cognition/skills/structured-handoff/scripts/generate_handoff.py --task "USER_TASK" --dir ".tasks" --num-tasks 5
    ```
 3. After generating the structure, read the created files and help the user fill in the details based on the project:
    - Analyze the codebase to populate `research.md` with relevant file paths
