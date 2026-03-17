@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6.0", "questionary", "rich", "ruff"]
+# dependencies = ["pyyaml>=6.0", "textual>=1.0.0", "ruff"]
 # ///
 """
 Marketplace test suite.

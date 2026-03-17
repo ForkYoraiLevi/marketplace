@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["questionary", "rich"]
+# dependencies = ["textual>=1.0.0"]
 # ///
 """
 Marketplace interactive installer — install and uninstall agent tools.
@@ -18,53 +18,6 @@ import json
 import shutil
 import sys
 from pathlib import Path
-
-import questionary
-from prompt_toolkit.keys import Keys as PtKeys
-from questionary import Style
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich import box
-
-console = Console()
-
-# Key binding hints shown on interactive prompts
-KEYS_CHECKBOX = "(Space: toggle, Enter: confirm, Esc: cancel)"
-KEYS_CONFIRM = "(Enter: confirm, Esc: cancel)"
-
-
-def _add_escape_binding(question: questionary.Question) -> questionary.Question:
-    """Patch a questionary Question so that Escape cancels (same as Ctrl+C)."""
-    kb = question.application.key_bindings
-    # confirm prompts use _MergedKeyBindings which lacks .add() —
-    # fall back to creating a fresh KeyBindings layer and merging it.
-    if hasattr(kb, "add"):
-        @kb.add(PtKeys.Escape, eager=True)
-        def _escape(event):
-            event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
-    else:
-        from prompt_toolkit.key_binding import KeyBindings, merge_key_bindings
-        extra = KeyBindings()
-
-        @extra.add(PtKeys.Escape, eager=True)
-        def _escape(event):
-            event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
-
-        question.application.key_bindings = merge_key_bindings([kb, extra])
-
-    return question
-
-STYLE = Style([
-    ("qmark", "fg:cyan bold"),
-    ("question", "bold"),
-    ("pointer", "fg:cyan bold"),
-    ("highlighted", "fg:cyan bold"),
-    ("selected", "fg:green"),
-    ("separator", "fg:#808080"),
-    ("instruction", "fg:#808080"),
-    ("answer", "fg:green bold"),
-])
 
 # ── Platform Definitions ────────────────────────────────────────────────────
 
@@ -155,6 +108,66 @@ MCP_SERVERS = {
     "memory": {
         "description": "Persistent knowledge graph memory",
         "config": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-memory"]},
+    },
+}
+
+# ── Category Families ───────────────────────────────────────────────────────
+# To add a new skill or rule to the installer, just add its name to the
+# appropriate family below.  Items not listed go into "Other".
+
+RULE_FAMILIES = {
+    "Quality & Verification": {
+        "icon": "\u2714",
+        "description": "Enforce code quality, testing, and review standards",
+        "members": ["blast-radius", "prior-art", "verification-ladder", "verify-your-work"],
+    },
+    "Documentation & Progress": {
+        "icon": "\U0001f4dd",
+        "description": "Track work, document decisions, maintain project history",
+        "members": ["document-lifecycle", "document-progress"],
+    },
+    "Workflow & Process": {
+        "icon": "\u2699",
+        "description": "Shape how agents approach and execute tasks",
+        "members": ["continuous-improvement", "improve-the-process", "stay-motivated", "task-formation"],
+    },
+    "Environment & Conventions": {
+        "icon": "\U0001f527",
+        "description": "Technical environment rules and output conventions",
+        "members": ["no-ai-credit", "python-uv"],
+    },
+    "Notifications": {
+        "icon": "\U0001f514",
+        "description": "Alert you when important events happen",
+        "members": ["telegram-on-complete"],
+    },
+}
+
+SKILL_FAMILIES = {
+    "Search & Research": {
+        "icon": "\U0001f50d",
+        "description": "Find information across web, code repos, and video",
+        "members": ["duckduckgo-search", "github-search", "web-scraper", "youtube-search", "youtube-wisdom"],
+    },
+    "Communication": {
+        "icon": "\u2709",
+        "description": "Send emails, messages, and notifications",
+        "members": ["send-email", "telegram-notify"],
+    },
+    "DevOps & Infrastructure": {
+        "icon": "\U0001f680",
+        "description": "Run CI locally, expose ports, manage tunnels",
+        "members": ["act-runner", "expose-port", "ssh-tunnel"],
+    },
+    "Productivity & Meta": {
+        "icon": "\u2b50",
+        "description": "Session management, handoffs, and skill development",
+        "members": ["motivation", "session-history", "structured-handoff", "skill-creator"],
+    },
+    "AI & External Services": {
+        "icon": "\U0001f916",
+        "description": "Connect to AI models and cloud APIs",
+        "members": ["gemini-chat", "google-drive-reader"],
     },
 }
 
@@ -398,6 +411,10 @@ def action_badge(result: str) -> str:
 
 
 def show_platform_table(platforms: dict, scope: str):
+    from rich.console import Console
+    from rich.table import Table
+    from rich import box
+    console = Console()
     table = Table(box=box.ROUNDED, title="Detected Platforms", title_style="bold cyan",
                   border_style="cyan", padding=(0, 1))
     table.add_column("Platform", style="bold")
@@ -414,227 +431,806 @@ def show_platform_table(platforms: dict, scope: str):
     console.print()
 
 
-def build_choices(items: list[dict], installed_check, *, install_mode: bool) -> list[questionary.Choice]:
-    """Build checkbox choices with install status shown."""
-    choices = []
+# ── TUI ─────────────────────────────────────────────────────────────────────
+
+APP_CSS = """
+Screen {
+    background: #0d1117;
+}
+
+#banner {
+    width: 100%;
+    height: auto;
+    content-align: center middle;
+    text-align: center;
+    padding: 1 0 0 0;
+    color: #58a6ff;
+}
+
+#main-area {
+    height: 1fr;
+    margin: 0 1;
+}
+
+#left-panel {
+    width: 2fr;
+    min-width: 50;
+    border: heavy #30363d;
+    border-title-color: #58a6ff;
+    border-title-style: bold;
+    padding: 0 1;
+    background: #0d1117;
+    overflow-y: auto;
+}
+
+#right-panel {
+    width: 1fr;
+    min-width: 28;
+    border: heavy #30363d;
+    border-title-color: #bc8cff;
+    border-title-style: bold;
+    padding: 1 2;
+    margin: 0 0 0 1;
+    background: #0d1117;
+}
+
+.section-header {
+    text-style: bold;
+    padding: 1 0 0 0;
+    margin: 0 0 0 0;
+}
+
+SelectionList {
+    height: auto;
+    max-height: 20;
+    border: none;
+    margin: 0 0 0 1;
+    padding: 0;
+    background: transparent;
+}
+
+SelectionList:focus {
+    border: none;
+}
+
+SelectionList > .selection-list--button {
+    background: transparent;
+}
+
+SelectionList:focus > .selection-list--button-highlighted {
+    background: #161b22;
+}
+
+SelectionList > .selection-list--button-highlighted {
+    background: #161b22;
+}
+
+SelectionList > .selection-list--button-selected {
+    color: #3fb950;
+}
+
+Collapsible {
+    padding: 0 0 0 1;
+    margin: 0;
+    background: transparent;
+    border: none;
+}
+
+CollapsibleTitle {
+    padding: 0;
+    color: #8b949e;
+    text-style: italic;
+    width: 100%;
+    background: transparent;
+}
+
+CollapsibleTitle:hover {
+    color: #58a6ff;
+    text-style: bold italic;
+}
+
+CollapsibleTitle:focus {
+    color: #58a6ff;
+    text-style: bold;
+}
+
+#right-panel-content {
+    height: auto;
+}
+
+#preview-header {
+    text-align: center;
+    text-style: bold;
+    color: #bc8cff;
+    padding: 0 0 1 0;
+}
+
+#preview-body {
+    padding: 1 0;
+    color: #c9d1d9;
+}
+
+#status-bar {
+    dock: bottom;
+    height: 1;
+    background: #161b22;
+    color: #8b949e;
+    text-align: center;
+    padding: 0 2;
+}
+
+Footer {
+    background: #161b22;
+}
+
+Footer > .footer--key {
+    background: #21262d;
+    color: #58a6ff;
+}
+
+Footer > .footer--description {
+    color: #8b949e;
+}
+
+/* Modal screens */
+ConfirmScreen, PreviewScreen, ResultsScreen {
+    align: center middle;
+}
+
+#confirm-dialog {
+    width: 70;
+    max-height: 80%;
+    border: heavy #30363d;
+    background: #0d1117;
+    padding: 1 2;
+}
+
+#preview-dialog {
+    width: 90%;
+    height: 90%;
+    border: heavy #bc8cff;
+    background: #0d1117;
+    padding: 1 2;
+}
+
+#results-dialog {
+    width: 80%;
+    max-height: 90%;
+    border: heavy #3fb950;
+    background: #0d1117;
+    padding: 1 2;
+}
+
+#modal-title {
+    text-align: center;
+    text-style: bold;
+    padding: 0 0 1 0;
+    color: #58a6ff;
+    width: 100%;
+}
+
+#modal-body {
+    height: 1fr;
+    overflow-y: auto;
+    padding: 1 1;
+    color: #c9d1d9;
+}
+
+#modal-actions {
+    height: 3;
+    align: center middle;
+    layout: horizontal;
+    padding: 1 0 0 0;
+}
+
+.modal-btn {
+    margin: 0 2;
+}
+
+.btn-install {
+    background: #238636;
+    color: #ffffff;
+    text-style: bold;
+}
+
+.btn-install:hover {
+    background: #2ea043;
+}
+
+.btn-cancel {
+    background: #21262d;
+    color: #c9d1d9;
+    border: tall #30363d;
+}
+
+.btn-cancel:hover {
+    background: #30363d;
+}
+
+.btn-close {
+    background: #21262d;
+    color: #c9d1d9;
+    border: tall #30363d;
+}
+
+.btn-done {
+    background: #238636;
+    color: #ffffff;
+    text-style: bold;
+}
+"""
+
+BANNER_TEXT = """\
+[bold #58a6ff]\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550[/]
+[bold #bc8cff]\u2726[/]  [bold #e2e4e8]S K I L L S   M A R K E T P L A C E[/]  [bold #bc8cff]\u2726[/]
+[dim #8b949e]Agent Tools Interactive Installer[/]
+[bold #58a6ff]\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550[/]\
+"""
+
+
+def _categorize_items(items: list[dict], families: dict) -> dict:
+    """Assign items to their family groups. Uncategorized go to 'Other'."""
+    member_map = {}
+    for fname, fdata in families.items():
+        for m in fdata["members"]:
+            member_map[m] = fname
+
+    result = {fname: {**fdata, "items": []} for fname, fdata in families.items()}
+    other_items = []
     for item in items:
-        is_inst = installed_check(item)
-        label = f"{item['name']:<25s} {item['description'][:50]}"
-        if install_mode:
-            choices.append(questionary.Choice(label, value=item["name"], checked=not is_inst))
+        family = member_map.get(item["name"])
+        if family and family in result:
+            result[family]["items"].append(item)
         else:
-            choices.append(questionary.Choice(label, value=item["name"], checked=is_inst))
-    return choices
+            other_items.append(item)
+
+    if other_items:
+        result["Other"] = {
+            "icon": "\u2022",
+            "description": "Uncategorized items",
+            "members": [],
+            "items": other_items,
+        }
+    return result
 
 
-# ── Main ────────────────────────────────────────────────────────────────────
+def _read_item_content(item: dict, item_type: str) -> str:
+    """Read the full content of a skill or rule for preview."""
+    path = item.get("path")
+    if not path:
+        return "No content available."
+    if item_type == "skill":
+        skill_md = path / "SKILL.md"
+        if skill_md.exists():
+            return skill_md.read_text()
+    elif item_type == "rule":
+        rule_md = path / "rule.md"
+        if rule_md.exists():
+            return rule_md.read_text()
+    readme = path / "README.md"
+    if readme.exists():
+        return readme.read_text()
+    return "No content available."
+
+
+# ── TUI App ─────────────────────────────────────────────────────────────────
 
 def main():
+    from textual import on
+    from textual.app import App, ComposeResult
+    from textual.binding import Binding
+    from textual.containers import Horizontal, Vertical, VerticalScroll
+    from textual.screen import ModalScreen
+    from textual.widgets import (
+        Button, Collapsible, Footer, Header,
+        Markdown, SelectionList, Static,
+    )
+    from textual.widgets.selection_list import Selection
+    from rich.text import Text
+
     parser = argparse.ArgumentParser(description="Marketplace interactive installer")
     parser.add_argument("--global", dest="scope", action="store_const", const="global", default="global")
     parser.add_argument("--project", dest="scope", action="store_const", const="project")
     parser.add_argument("--uninstall", action="store_true", help="Uninstall mode")
     args = parser.parse_args()
     scope = args.scope
+    install_mode = not args.uninstall
+    mode_verb = "Install" if install_mode else "Uninstall"
 
-    mode = "uninstall" if args.uninstall else "install"
-    mode_color = "red" if mode == "uninstall" else "cyan"
-    mode_verb = "Uninstall" if mode == "uninstall" else "Install"
-    mode_past = "uninstalled" if mode == "uninstall" else "installed"
-
-    console.print(Panel.fit(
-        f"[bold {mode_color}]Marketplace {mode_verb}er[/bold {mode_color}]\n"
-        f"Select agent tools to {mode} ({scope} scope)",
-        border_style=mode_color,
-    ))
-    console.print("[dim]Navigation: arrows to move, Space to toggle, Enter to confirm, Esc to cancel[/dim]")
-    console.print()
-
-    # ── Detect platforms ──
     platforms = detect_platforms()
     if not platforms:
-        console.print("[red]No agent platforms detected.[/red]")
+        from rich.console import Console
+        Console().print("[red]No agent platforms detected.[/red]")
         sys.exit(1)
-    show_platform_table(platforms, scope)
 
-    platform_choices = _add_escape_binding(questionary.checkbox(
-        "Which platforms?",
-        choices=[questionary.Choice(info["label"], value=pid, checked=True)
-                 for pid, info in platforms.items()],
-        style=STYLE,
-        instruction=KEYS_CHECKBOX,
-    )).ask()
-    if not platform_choices:
-        console.print("[yellow]Cancelled.[/yellow]")
-        return
-
-    if len(platform_choices) > 1 and mode == "install":
-        # Check if multiple platforms would write rules the same agent reads
-        agents_fmts = [pid for pid in platform_choices if PLATFORMS[pid]["rule_fmt"] == "agents"]
-        if len(agents_fmts) > 1:
-            labels = ", ".join(PLATFORMS[p]["label"] for p in agents_fmts)
-            console.print(f"[yellow]Note:[/yellow] {labels} all use AGENTS.md format — "
-                          "rules will be appended to separate files, no duplication.")
-        else:
-            console.print(
-                f"[yellow]Note:[/yellow] Installing to {len(platform_choices)} platforms. "
-                "If your agent reads from multiple sources (e.g. Devin reads AGENTS.md + "
-                ".windsurf/ + .cursor/), rules may appear multiple times in context. "
-                "Consider installing to one platform only."
-            )
-        console.print()
-
-    # ── Scan marketplace ──
     marketplace = find_marketplace()
-    rules = scan_rules(marketplace)
-    skills = scan_skills(marketplace)
+    all_rules = scan_rules(marketplace)
+    all_skills = scan_skills(marketplace)
 
-    # For status detection, use first selected platform
-    primary_pid = platform_choices[0]
+    primary_pid = list(platforms.keys())[0]
     primary_paths = PLATFORMS[primary_pid][scope]
-
-    # ── MCP Servers ──
-    console.print(f"\n[bold {mode_color}]MCP Servers[/bold {mode_color}]")
     primary_mcps = read_mcp_servers(primary_paths["config"])
-    mcp_choices_list = []
-    for name, srv in MCP_SERVERS.items():
-        is_inst = name in primary_mcps
-        marker = "\u2713 " if is_inst else "  "
-        label = f"{marker}{name:<20s} {srv['description'][:50]}"
-        if mode == "install":
-            mcp_choices_list.append(questionary.Choice(label, value=name, checked=not is_inst))
-        else:
-            mcp_choices_list.append(questionary.Choice(label, value=name, checked=is_inst))
 
-    mcp_choices = _add_escape_binding(questionary.checkbox(
-        f"MCP servers to {mode}:",
-        choices=mcp_choices_list,
-        style=STYLE,
-        instruction=KEYS_CHECKBOX,
-    )).ask()
-    if mcp_choices is None:
-        console.print("[yellow]Cancelled.[/yellow]")
-        return
+    rule_families = _categorize_items(all_rules, RULE_FAMILIES)
+    skill_families = _categorize_items(all_skills, SKILL_FAMILIES)
 
-    # ── Rules ──
-    console.print(f"\n[bold {mode_color}]Rules[/bold {mode_color}] [dim](always-on agent instructions)[/dim]")
-    rule_choices_list = []
-    for r in rules:
-        is_inst = is_rule_installed(primary_pid, r["name"], primary_paths)
-        marker = "\u2713 " if is_inst else "  "
-        label = f"{marker}{r['name']:<25s} {r['description'][:45]}"
-        if mode == "install":
-            rule_choices_list.append(questionary.Choice(label, value=r["name"], checked=not is_inst))
-        else:
-            rule_choices_list.append(questionary.Choice(label, value=r["name"], checked=is_inst))
+    # ── Preview Modal ──
+    class PreviewScreen(ModalScreen):
+        BINDINGS = [Binding("escape", "dismiss", "Close")]
 
-    rule_choices = _add_escape_binding(questionary.checkbox(
-        f"Rules to {mode}:",
-        choices=rule_choices_list,
-        style=STYLE,
-        instruction=KEYS_CHECKBOX,
-    )).ask()
-    if rule_choices is None:
-        console.print("[yellow]Cancelled.[/yellow]")
-        return
+        def __init__(self, title: str, content: str):
+            super().__init__()
+            self._title = title
+            self._content = content
 
-    # ── Skills ──
-    console.print(f"\n[bold {mode_color}]Skills[/bold {mode_color}] [dim](on-demand /skill-name commands)[/dim]")
-    skill_choices_list = []
-    for s in skills:
-        is_inst = is_skill_installed(s["name"], primary_paths)
-        marker = "\u2713 " if is_inst else "  "
-        label = f"{marker}{s['name']:<25s} {s['description'][:45]}"
-        if mode == "install":
-            skill_choices_list.append(questionary.Choice(label, value=s["name"], checked=not is_inst))
-        else:
-            skill_choices_list.append(questionary.Choice(label, value=s["name"], checked=is_inst))
+        def compose(self) -> ComposeResult:
+            with Vertical(id="preview-dialog"):
+                yield Static(
+                    f"[bold #bc8cff]\u2500\u2500 {self._title} \u2500\u2500[/]",
+                    id="modal-title",
+                )
+                yield VerticalScroll(
+                    Markdown(self._content, id="preview-md"),
+                    id="modal-body",
+                )
+                with Horizontal(id="modal-actions"):
+                    yield Button("Close [Esc]", variant="default", classes="modal-btn btn-close", id="preview-close")
 
-    skill_choices = _add_escape_binding(questionary.checkbox(
-        f"Skills to {mode}:",
-        choices=skill_choices_list,
-        style=STYLE,
-        instruction=KEYS_CHECKBOX,
-    )).ask()
-    if skill_choices is None:
-        console.print("[yellow]Cancelled.[/yellow]")
-        return
+        @on(Button.Pressed, "#preview-close")
+        def close(self, _event) -> None:
+            self.dismiss()
 
-    # ── Confirm ──
-    total = len(mcp_choices) + len(rule_choices) + len(skill_choices)
-    if total == 0:
-        console.print("[yellow]Nothing selected.[/yellow]")
-        return
+    # ── Confirm Modal ──
+    class ConfirmScreen(ModalScreen[bool]):
+        BINDINGS = [Binding("escape", "cancel", "Cancel")]
 
-    summary = Table(box=box.SIMPLE, show_header=False, padding=(0, 2))
-    summary.add_column(style="bold")
-    summary.add_column()
-    summary.add_row("Action", f"[bold {mode_color}]{mode_verb}[/bold {mode_color}]")
-    summary.add_row("MCP servers", f"{len(mcp_choices)}")
-    summary.add_row("Rules", f"{len(rule_choices)}")
-    summary.add_row("Skills", f"{len(skill_choices)}")
-    summary.add_row("Platforms", ", ".join(platform_choices))
-    summary.add_row("Scope", scope)
-    console.print(Panel(summary, title="Summary", border_style=mode_color))
+        def __init__(self, summary_text: str, mode_label: str):
+            super().__init__()
+            self._summary = summary_text
+            self._mode_label = mode_label
 
-    proceed = _add_escape_binding(questionary.confirm(
-        f"Proceed with {mode}?", default=True, style=STYLE,
-        instruction=KEYS_CONFIRM,
-    )).ask()
-    if not proceed:
-        console.print("[yellow]Cancelled.[/yellow]")
-        return
+        def compose(self) -> ComposeResult:
+            with Vertical(id="confirm-dialog"):
+                yield Static(f"[bold #58a6ff]\u2500\u2500 Confirm {self._mode_label} \u2500\u2500[/]", id="modal-title")
+                yield Static(self._summary, id="modal-body")
+                with Horizontal(id="modal-actions"):
+                    yield Button(f"{self._mode_label}", variant="success", classes="modal-btn btn-install", id="confirm-yes")
+                    yield Button("Cancel", variant="default", classes="modal-btn btn-cancel", id="confirm-no")
 
-    # ── Execute ──
-    console.print()
-    selected_rules = {r["name"]: r for r in rules if r["name"] in rule_choices}
-    selected_skills = {s["name"]: s for s in skills if s["name"] in skill_choices}
+        @on(Button.Pressed, "#confirm-yes")
+        def confirm(self, _event) -> None:
+            self.dismiss(True)
 
-    results_table = Table(box=box.ROUNDED, border_style=mode_color, padding=(0, 1),
-                          title=f"{mode_verb}ation Results", title_style=f"bold {mode_color}")
-    results_table.add_column("Platform", style="bold cyan")
-    results_table.add_column("Type")
-    results_table.add_column("Name")
-    results_table.add_column("Result")
+        @on(Button.Pressed, "#confirm-no")
+        def cancel(self, _event=None) -> None:
+            self.dismiss(False)
 
-    for pid in platform_choices:
-        info = PLATFORMS[pid]
-        paths = info[scope]
+        def action_cancel(self) -> None:
+            self.dismiss(False)
 
-        # MCP servers
-        for name in mcp_choices:
-            if mode == "install":
-                res = install_mcp(name, MCP_SERVERS[name], paths["config"])
+    # ── Results Modal ──
+    class ResultsScreen(ModalScreen):
+        BINDINGS = [Binding("escape", "dismiss_screen", "Done"), Binding("enter", "dismiss_screen", "Done")]
+
+        def __init__(self, results_text: str):
+            super().__init__()
+            self._results = results_text
+
+        def compose(self) -> ComposeResult:
+            with Vertical(id="results-dialog"):
+                yield Static("[bold #3fb950]\u2500\u2500 Results \u2500\u2500[/]", id="modal-title")
+                yield VerticalScroll(Static(self._results), id="modal-body")
+                with Horizontal(id="modal-actions"):
+                    yield Button("Done [Enter]", variant="success", classes="modal-btn btn-done", id="results-done")
+
+        @on(Button.Pressed, "#results-done")
+        def done(self, _event) -> None:
+            self.dismiss()
+
+        def action_dismiss_screen(self) -> None:
+            self.dismiss()
+
+    # ── Main App ──
+    class MarketplaceApp(App):
+        CSS = APP_CSS
+        TITLE = "Skills Marketplace"
+        BINDINGS = [
+            Binding("q", "quit_app", "Quit"),
+            Binding("p", "preview", "Show Me"),
+            Binding("i", "do_install", f"{mode_verb}"),
+            Binding("a", "select_all", "All"),
+            Binding("n", "select_none", "None"),
+        ]
+
+        def __init__(self):
+            super().__init__()
+            self._item_metadata: dict[str, dict] = {}
+
+        def compose(self) -> ComposeResult:
+            yield Header(show_clock=False)
+            yield Static(BANNER_TEXT, id="banner")
+            with Horizontal(id="main-area"):
+                with VerticalScroll(id="left-panel"):
+                    self._build_left_panel()
+                with Vertical(id="right-panel"):
+                    yield Static(
+                        "[bold #bc8cff]Preview[/]\n\n"
+                        "[dim #8b949e]Navigate to any item and press "
+                        "[bold #58a6ff]P[/bold #58a6ff] to show its full content.\n\n"
+                        "Use [bold]Space[/bold] to toggle selections.\n"
+                        "Use [bold]Tab[/bold] to move between sections.\n"
+                        "Use [bold]I[/bold] to install selected items.[/dim #8b949e]",
+                        id="preview-body",
+                    )
+            yield Static(
+                f"[bold #8b949e]{mode_verb} mode \u2502 {scope} scope \u2502 "
+                f"0 items selected[/]",
+                id="status-bar",
+            )
+            yield Footer()
+
+        def _build_left_panel(self):
+            """Generator helper that yields all widgets for the left panel."""
+            # ── Platforms ──
+            yield Static(
+                "[bold #58a6ff]\u2588\u2588 PLATFORMS[/]",
+                classes="section-header",
+            )
+            plat_selections = []
+            for pid, info in platforms.items():
+                cfg = info[scope]["config"]
+                detected = cfg.exists()
+                status = "[#3fb950]\u2713 config found[/]" if detected else "[#8b949e]dir exists[/]"
+                label = Text.from_markup(
+                    f"[bold]{info['label']}[/]  {status}"
+                )
+                plat_selections.append(
+                    Selection(label, pid, initial_state=True)
+                )
+                self._item_metadata[pid] = {
+                    "type": "platform", "name": info["label"],
+                    "description": f"Config: {cfg}\nDetected: {'yes' if detected else 'no'}",
+                }
+            yield SelectionList(*plat_selections, id="sl-platforms")
+
+            # ── MCP Servers ──
+            yield Static(
+                "[bold #da3633]\u2588\u2588 MCP SERVERS[/]  "
+                "[dim #8b949e]External tool connections[/]",
+                classes="section-header",
+            )
+            mcp_selections = []
+            for name, srv in MCP_SERVERS.items():
+                is_inst = name in primary_mcps
+                status = " [#3fb950]\u2713[/]" if is_inst else ""
+                label = Text.from_markup(
+                    f"[bold]{name}[/]{status}  [dim]{srv['description']}[/]"
+                )
+                default_checked = (not is_inst) if install_mode else is_inst
+                mcp_selections.append(
+                    Selection(label, f"mcp:{name}", initial_state=default_checked)
+                )
+                self._item_metadata[f"mcp:{name}"] = {
+                    "type": "mcp", "name": name,
+                    "description": srv["description"],
+                    "installed": is_inst,
+                    "config": json.dumps(srv["config"], indent=2),
+                }
+            yield SelectionList(*mcp_selections, id="sl-mcps")
+
+            # ── Rules ──
+            yield Static(
+                "[bold #d29922]\u2588\u2588 RULES[/]  "
+                "[dim #8b949e]Always-on agent behaviors[/]",
+                classes="section-header",
+            )
+            for fname, fdata in rule_families.items():
+                if not fdata["items"]:
+                    continue
+                icon = fdata.get("icon", "\u2022")
+                sel_count = 0
+                family_selections = []
+                for item in fdata["items"]:
+                    is_inst = is_rule_installed(primary_pid, item["name"], primary_paths)
+                    status = " [#3fb950]\u2713[/]" if is_inst else ""
+                    label = Text.from_markup(
+                        f"[bold]{item['name']}[/]{status}  [dim]{item['description']}[/]"
+                    )
+                    default_checked = (not is_inst) if install_mode else is_inst
+                    if default_checked:
+                        sel_count += 1
+                    family_selections.append(
+                        Selection(label, f"rule:{item['name']}", initial_state=default_checked)
+                    )
+                    self._item_metadata[f"rule:{item['name']}"] = {
+                        "type": "rule", "name": item["name"],
+                        "description": item["description"],
+                        "installed": is_inst,
+                        "formats": item.get("formats", []),
+                        "path": item["path"],
+                    }
+                slug = fname.lower().replace(" ", "-").replace("&", "and")
+                with Collapsible(
+                    title=f"{icon}  {fname}  \u2014  {fdata['description']}  ({sel_count}/{len(fdata['items'])})",
+                    collapsed=False,
+                ):
+                    yield SelectionList(
+                        *family_selections,
+                        id=f"sl-rules-{slug}",
+                    )
+
+            # ── Skills ──
+            yield Static(
+                "[bold #a371f7]\u2588\u2588 SKILLS[/]  "
+                "[dim #8b949e]On-demand /skill-name commands[/]",
+                classes="section-header",
+            )
+            for fname, fdata in skill_families.items():
+                if not fdata["items"]:
+                    continue
+                icon = fdata.get("icon", "\u2022")
+                sel_count = 0
+                family_selections = []
+                for item in fdata["items"]:
+                    is_inst = is_skill_installed(item["name"], primary_paths)
+                    status = " [#3fb950]\u2713[/]" if is_inst else ""
+                    label = Text.from_markup(
+                        f"[bold]{item['name']}[/]{status}  [dim]{item['description']}[/]"
+                    )
+                    default_checked = (not is_inst) if install_mode else is_inst
+                    if default_checked:
+                        sel_count += 1
+                    family_selections.append(
+                        Selection(label, f"skill:{item['name']}", initial_state=default_checked)
+                    )
+                    self._item_metadata[f"skill:{item['name']}"] = {
+                        "type": "skill", "name": item["name"],
+                        "description": item["description"],
+                        "installed": is_inst,
+                        "path": item["path"],
+                    }
+                slug = fname.lower().replace(" ", "-").replace("&", "and")
+                with Collapsible(
+                    title=f"{icon}  {fname}  \u2014  {fdata['description']}  ({sel_count}/{len(fdata['items'])})",
+                    collapsed=False,
+                ):
+                    yield SelectionList(
+                        *family_selections,
+                        id=f"sl-skills-{slug}",
+                    )
+
+        def _get_all_selection_lists(self) -> list:
+            """Get all SelectionList widgets."""
+            try:
+                return list(self.query(SelectionList))
+            except Exception:
+                return []
+
+        def _count_selected(self) -> int:
+            total = 0
+            for sl in self._get_all_selection_lists():
+                if sl.id == "sl-platforms":
+                    continue
+                total += len(sl.selected)
+            return total
+
+        def _update_status_bar(self) -> None:
+            count = self._count_selected()
+            bar = self.query_one("#status-bar", Static)
+            bar.update(
+                f"[bold #8b949e]{mode_verb} mode \u2502 {scope} scope \u2502 "
+                f"[bold #58a6ff]{count}[/bold #58a6ff] items selected[/]"
+            )
+
+        @on(SelectionList.SelectionToggled)
+        def _on_toggle(self, _event) -> None:
+            self._update_status_bar()
+
+        @on(SelectionList.SelectionHighlighted)
+        def _on_highlight(self, event) -> None:
+            """Update the preview panel when cursor moves."""
+            if event.selection is None:
+                return
+            value = event.selection.value
+            meta = self._item_metadata.get(value, {})
+            if not meta:
+                return
+            name = meta.get("name", "")
+            desc = meta.get("description", "")
+            item_type = meta.get("type", "")
+            installed = meta.get("installed", False)
+            inst_str = "[#3fb950]installed[/]" if installed else "[dim]not installed[/]"
+
+            lines = [
+                f"[bold #e2e4e8]{name}[/]",
+                "",
+                f"[#c9d1d9]{desc}[/]",
+                "",
+                f"[dim]Status:[/] {inst_str}",
+                f"[dim]Type:[/] [#8b949e]{item_type}[/]",
+            ]
+            if item_type == "mcp":
+                lines.append(f"\n[dim]Config:[/]\n[#8b949e]{meta.get('config', '')}[/]")
+            if item_type == "rule":
+                fmts = meta.get("formats", [])
+                if fmts:
+                    lines.append(f"[dim]Formats:[/] [#8b949e]{', '.join(fmts)}[/]")
+            lines.append(
+                "\n[dim #565f89]Press [bold #58a6ff]P[/bold #58a6ff] to view full content[/]"
+            )
+            preview = self.query_one("#preview-body", Static)
+            preview.update("\n".join(lines))
+
+        def action_quit_app(self) -> None:
+            self.exit()
+
+        def action_preview(self) -> None:
+            """Show full SKILL.md or rule.md in a modal."""
+            focused = self.focused
+            if not isinstance(focused, SelectionList):
+                self.notify("Focus a selection list first", severity="warning")
+                return
+            idx = focused.highlighted
+            if idx is None:
+                return
+            option = focused.get_option_at_index(idx)
+            value = option.value
+            meta = self._item_metadata.get(value, {})
+            if not meta:
+                return
+            name = meta.get("name", value)
+            item_type = meta.get("type", "")
+            if item_type in ("skill", "rule") and "path" in meta:
+                item_dict = {"path": meta["path"]}
+                content = _read_item_content(item_dict, item_type)
+            elif item_type == "mcp":
+                content = (
+                    f"# {name}\n\n"
+                    f"{meta.get('description', '')}\n\n"
+                    f"## Configuration\n\n```json\n{meta.get('config', '')}\n```"
+                )
             else:
-                res = uninstall_mcp(name, paths["config"])
-            results_table.add_row(info["label"], "[green]MCP[/green]", name, action_badge(res))
+                content = f"# {name}\n\n{meta.get('description', '')}"
+            self.push_screen(PreviewScreen(name, content))
 
-        # Rules
-        for name in rule_choices:
-            rule = selected_rules[name]
-            if mode == "install":
-                res = install_rule(rule, pid, paths)
-            else:
-                res = uninstall_rule(rule, pid, paths)
-            results_table.add_row(info["label"], "[yellow]Rule[/yellow]", name, action_badge(res))
+        def action_select_all(self) -> None:
+            focused = self.focused
+            if isinstance(focused, SelectionList):
+                focused.select_all()
+                self._update_status_bar()
 
-        # Skills
-        skills_dir = paths.get("skills")
-        for name in skill_choices:
-            if mode == "install":
-                skill = selected_skills[name]
-                res = install_skill(skill, skills_dir)
-            else:
-                res = uninstall_skill(name, skills_dir)
-            results_table.add_row(info["label"], "[magenta]Skill[/magenta]", name, action_badge(res))
+        def action_select_none(self) -> None:
+            focused = self.focused
+            if isinstance(focused, SelectionList):
+                focused.deselect_all()
+                self._update_status_bar()
 
-    console.print(results_table)
-    console.print()
-    console.print(Panel.fit(
-        f"[bold green]Done![/bold green] {total} items {mode_past} across {len(platform_choices)} platform(s).\n"
-        "Restart agent sessions to pick up changes.",
-        border_style="green",
-    ))
+        def action_do_install(self) -> None:
+            """Gather selections and show confirmation."""
+            plat_list = self.query_one("#sl-platforms", SelectionList)
+            selected_platforms = list(plat_list.selected)
+            if not selected_platforms:
+                self.notify("Select at least one platform", severity="warning")
+                return
+
+            selected_mcps = []
+            selected_rules = []
+            selected_skills = []
+            for sl in self._get_all_selection_lists():
+                if sl.id == "sl-platforms":
+                    continue
+                for val in sl.selected:
+                    if isinstance(val, str):
+                        if val.startswith("mcp:"):
+                            selected_mcps.append(val.split(":", 1)[1])
+                        elif val.startswith("rule:"):
+                            selected_rules.append(val.split(":", 1)[1])
+                        elif val.startswith("skill:"):
+                            selected_skills.append(val.split(":", 1)[1])
+
+            total = len(selected_mcps) + len(selected_rules) + len(selected_skills)
+            if total == 0:
+                self.notify("Nothing selected", severity="warning")
+                return
+
+            summary_lines = [
+                f"[bold]Action:[/] [bold #58a6ff]{mode_verb}[/]",
+                f"[bold]Scope:[/] {scope}",
+                f"[bold]Platforms:[/] {', '.join(PLATFORMS[p]['label'] for p in selected_platforms)}",
+                "",
+                f"[bold]MCP Servers:[/] {len(selected_mcps)}",
+            ]
+            for m in selected_mcps:
+                summary_lines.append(f"  \u2022 {m}")
+            summary_lines.append(f"\n[bold]Rules:[/] {len(selected_rules)}")
+            for r in selected_rules:
+                summary_lines.append(f"  \u2022 {r}")
+            summary_lines.append(f"\n[bold]Skills:[/] {len(selected_skills)}")
+            for s in selected_skills:
+                summary_lines.append(f"  \u2022 {s}")
+            summary_lines.append(f"\n[bold]Total:[/] {total} items")
+
+            def handle_confirm(confirmed: bool | None) -> None:
+                if confirmed:
+                    self._execute_install(
+                        selected_platforms, selected_mcps,
+                        selected_rules, selected_skills,
+                    )
+
+            self.push_screen(
+                ConfirmScreen("\n".join(summary_lines), mode_verb),
+                callback=handle_confirm,
+            )
+
+        def _execute_install(
+            self,
+            selected_platforms: list[str],
+            selected_mcps: list[str],
+            selected_rules: list[str],
+            selected_skills: list[str],
+        ) -> None:
+            rules_by_name = {r["name"]: r for r in all_rules}
+            skills_by_name = {s["name"]: s for s in all_skills}
+
+            result_lines = []
+            total_count = 0
+
+            for pid in selected_platforms:
+                info = PLATFORMS[pid]
+                paths = info[scope]
+                plabel = info["label"]
+
+                for name in selected_mcps:
+                    if install_mode:
+                        res = install_mcp(name, MCP_SERVERS[name], paths["config"])
+                    else:
+                        res = uninstall_mcp(name, paths["config"])
+                    color = "#3fb950" if res in ("installed", "removed") else "#8b949e"
+                    result_lines.append(
+                        f"  [{color}]\u2502[/] {plabel:<14s} [bold]MCP[/]    {name:<24s} [{color}]{res}[/]"
+                    )
+                    total_count += 1
+
+                for name in selected_rules:
+                    rule = rules_by_name.get(name)
+                    if not rule:
+                        continue
+                    if install_mode:
+                        res = install_rule(rule, pid, paths)
+                    else:
+                        res = uninstall_rule(rule, pid, paths)
+                    color = "#3fb950" if res in ("installed", "removed") else "#8b949e"
+                    result_lines.append(
+                        f"  [{color}]\u2502[/] {plabel:<14s} [bold]Rule[/]   {name:<24s} [{color}]{res}[/]"
+                    )
+                    total_count += 1
+
+                skills_dir = paths.get("skills")
+                for name in selected_skills:
+                    skill = skills_by_name.get(name)
+                    if not skill:
+                        continue
+                    if install_mode:
+                        res = install_skill(skill, skills_dir)
+                    else:
+                        res = uninstall_skill(name, skills_dir)
+                    color = "#3fb950" if res in ("installed", "removed") else "#8b949e"
+                    result_lines.append(
+                        f"  [{color}]\u2502[/] {plabel:<14s} [bold]Skill[/]  {name:<24s} [{color}]{res}[/]"
+                    )
+                    total_count += 1
+
+            past = "installed" if install_mode else "uninstalled"
+            header = (
+                f"[bold #3fb950]\u2714 Done![/] {total_count} items {past} "
+                f"across {len(selected_platforms)} platform(s).\n"
+                "[dim]Restart agent sessions to pick up changes.[/]\n"
+            )
+            results_text = header + "\n" + "\n".join(result_lines)
+            self.push_screen(ResultsScreen(results_text), callback=lambda _: self.exit())
+
+    app = MarketplaceApp()
+    app.run()
 
 
 if __name__ == "__main__":

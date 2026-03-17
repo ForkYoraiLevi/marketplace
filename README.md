@@ -37,6 +37,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [motivation](./skills/motivation/) | Completeness checker — report what's actually unfinished before stopping |
 | [send-email](./skills/send-email/) | Send an email to someone using the Resend API |
 | [session-history](./skills/session-history/) | Query past Devin CLI conversations from the local session database |
+| [skill-creator](./skills/skill-creator/) | Create, test, and iteratively improve agent skills with evals |
 | [ssh-tunnel](./skills/ssh-tunnel/) | Set up SSH port forwarding tunnels (local, remote, SOCKS proxy) |
 | [structured-handoff](./skills/structured-handoff/) | Generate structured task files for autonomous agent sessions |
 | [telegram-notify](./skills/telegram-notify/) | Send a Telegram notification with a task summary |
