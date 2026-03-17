@@ -694,10 +694,14 @@ _BRAILLE = [
     (0, 0, 0x01), (1, 0, 0x02), (2, 0, 0x04), (3, 0, 0x40),
     (0, 1, 0x08), (1, 1, 0x10), (2, 1, 0x20), (3, 1, 0x80),
 ]
-_GEO_COLORS = [
-    "cyan", "deep_sky_blue1", "dodger_blue1", "dodger_blue2",
-    "medium_purple1", "medium_purple1", "blue", "medium_blue",
-    "slate_blue1", "magenta",
+_GEO_PALETTE = [
+    "bright_cyan", "cyan", "deep_sky_blue1", "dodger_blue1",
+    "dodger_blue2", "medium_purple1", "blue", "medium_blue",
+    "slate_blue1", "magenta", "bright_magenta", "hot_pink",
+    "deep_pink1", "red1", "orange_red1", "dark_orange",
+    "orange1", "gold1", "yellow", "green_yellow",
+    "bright_green", "spring_green1", "medium_spring_green",
+    "dark_cyan", "bright_cyan",
 ]
 _GEO_TEXT = [
     "",
@@ -842,8 +846,11 @@ def main():
                 blines.append(row)
 
             parts = []
+            n_pal = len(_GEO_PALETTE)
+            shift = int(a * 3) % n_pal  # cycle through palette over time
             for i, bl in enumerate(blines):
-                c = _GEO_COLORS[i] if i < len(_GEO_COLORS) else "magenta"
+                ci = (shift + i) % n_pal
+                c = _GEO_PALETTE[ci]
                 t = _GEO_TEXT[i] if i < len(_GEO_TEXT) else ""
                 parts.append(f"[bold {c}]{bl}[/]{t}")
             self.update("\n".join(parts))
