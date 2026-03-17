@@ -440,22 +440,22 @@ Screen {
 
 #banner {
     width: 100%;
-    height: auto;
+    height: 1;
     content-align: center middle;
     text-align: center;
-    padding: 1 0 0 0;
+    padding: 0;
     color: #58a6ff;
+    background: #161b22;
 }
 
 #main-area {
     height: 1fr;
-    margin: 0 1;
+    margin: 0;
 }
 
 #left-panel {
     width: 2fr;
-    min-width: 50;
-    border: heavy #30363d;
+    border: round #30363d;
     border-title-color: #58a6ff;
     border-title-style: bold;
     padding: 0 1;
@@ -465,19 +465,17 @@ Screen {
 
 #right-panel {
     width: 1fr;
-    min-width: 28;
-    border: heavy #30363d;
+    border: round #30363d;
     border-title-color: #bc8cff;
     border-title-style: bold;
-    padding: 1 2;
-    margin: 0 0 0 1;
+    padding: 1 1;
     background: #0d1117;
 }
 
 .section-header {
     text-style: bold;
-    padding: 1 0 0 0;
-    margin: 0 0 0 0;
+    padding: 0;
+    margin: 1 0 0 0;
 }
 
 SelectionList {
@@ -661,10 +659,7 @@ ConfirmScreen, PreviewScreen, ResultsScreen {
 """
 
 BANNER_TEXT = """\
-[bold #58a6ff]\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550[/]
-[bold #bc8cff]\u2726[/]  [bold #e2e4e8]S K I L L S   M A R K E T P L A C E[/]  [bold #bc8cff]\u2726[/]
-[dim #8b949e]Agent Tools Interactive Installer[/]
-[bold #58a6ff]\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550[/]\
+[bold #58a6ff]\u2550\u2550\u2550[/] [bold #bc8cff]\u2726[/] [bold #e2e4e8]SKILLS MARKETPLACE[/] [bold #bc8cff]\u2726[/] [bold #58a6ff]\u2550\u2550\u2550[/]  [dim #8b949e]Agent Tools Installer[/]\
 """
 
 
@@ -851,7 +846,7 @@ def main():
             yield Static(BANNER_TEXT, id="banner")
             with Horizontal(id="main-area"):
                 with VerticalScroll(id="left-panel"):
-                    self._build_left_panel()
+                    yield from self._build_left_panel()
                 with Vertical(id="right-panel"):
                     yield Static(
                         "[bold #bc8cff]Preview[/]\n\n"
