@@ -1,6 +1,6 @@
 # Textual TUI Patterns — Reference
 
-Annotated patterns extracted from the marketplace installer (`install.py`), a 1200+ line production TUI. Use this as a cookbook when building your own.
+Annotated patterns extracted from the marketplace installer (`install.py`), a 1400+ line production TUI. Use this as a cookbook when building your own.
 
 ## Table of Contents
 
@@ -12,8 +12,10 @@ Annotated patterns extracted from the marketplace installer (`install.py`), a 12
 6. [Modal screen patterns](#modal-screen-patterns)
 7. [Event-driven preview updates](#event-driven-preview-updates)
 8. [Gathering and acting on selections](#gathering-and-acting-on-selections)
-9. [CSS reference](#css-reference)
-10. [Full app lifecycle](#full-app-lifecycle)
+9. [Animated widgets](#animated-widgets)
+10. [CSS reference](#css-reference)
+11. [Platform fixes](#platform-fixes)
+12. [Full app lifecycle](#full-app-lifecycle)
 
 ---
 
@@ -362,11 +364,11 @@ Complete CSS from the installer, annotated:
 /* App background */
 Screen { background: $surface; }
 
-/* Top banner — single line, centered */
+/* Top banner — fixed height for animated content */
 #banner {
-    width: 100%; height: 1;
-    content-align: center middle; text-align: center;
-    background: $panel; color: $primary; text-style: bold;
+    width: 100%; height: 10;
+    content-align: center middle; text-align: left;
+    background: $panel; color: $primary; padding: 0 2;
 }
 
 /* Main content fills remaining space */

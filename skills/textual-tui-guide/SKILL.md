@@ -325,10 +325,65 @@ For TUIs that manage selectable items with metadata:
 
 ## Reference
 
-For a complete annotated cookbook with production-tested patterns (CSS reference, modal patterns, event handling, full app lifecycle), read the bundled reference:
+For a complete annotated cookbook with production-tested patterns (CSS reference, modal patterns, event handling, full app lifecycle, animated widgets), read the bundled reference:
 
 ```
 @skills/textual-tui-guide/references/patterns.md
+```
+
+## Animated widgets
+
+Subclass `Static` and use `set_interval` + `self.update()` for live-updating content:
+
+```python
+import math, colorsys
+
+class AnimatedBanner(Static):
+    def on_mount(self):
+        self._angle = 0.0
+        self._render_frame()
+        self.set_interval(1 / 12, self._tick)  # 12 FPS
+
+    def _tick(self):
+        self._angle += 0.05
+        self._render_frame()
+
+    def _render_frame(self):
+        # Compute content from self._angle, then:
+        self.update(markup_string)
+```
+
+Fix banner height in CSS to prevent layout jitter: `#banner { height: 10; }`
+
+### Smooth color gradients with HSV
+
+Use `colorsys.hsv_to_rgb` + Rich's `rgb(r,g,b)` for smooth animated colors instead of jumping between named colors:
+
+```python
+hue = (self._angle * 0.08 + row / total_rows * 0.6) % 1.0
+r, g, b = colorsys.hsv_to_rgb(hue, 0.8, 1.0)
+color = f"rgb({int(r*255)},{int(g*255)},{int(b*255)})"
+line = f"[bold {color}]{content}[/]"
+```
+
+## Overriding widget keybindings
+
+To reclaim a key from a built-in widget (e.g., free Space from CollapsibleTitle):
+
+```python
+from textual.widgets._collapsible import CollapsibleTitle
+CollapsibleTitle.BINDINGS = [Binding("enter", "toggle", "Toggle")]
+# Now Space is free for your own bindings
+```
+
+## Screenshot fix
+
+Textual's built-in screenshot saves to `~/Downloads/` which may not exist. Override to ensure the directory exists:
+
+```python
+def action_screenshot(self, filename=None, path=None):
+    (Path.home() / "Downloads").mkdir(parents=True, exist_ok=True)
+    super().action_screenshot(filename, path)
 ```
 
 ## Common pitfalls
@@ -339,5 +394,8 @@ For a complete annotated cookbook with production-tested patterns (CSS reference
 - **VerticalScroll focus**: Set `can_focus = False` on scroll containers so Tab skips them and goes to interactive widgets.
 - **Modal return types**: `ModalScreen[bool]` needs `self.dismiss(True/False)`. Forgetting the type parameter means callbacks get `None`.
 - **Rich markup in SelectionList**: Use `Text.from_markup()` for labels, not raw strings with `[bold]` tags.
+- **Animation layout jitter**: Use fixed `height` in CSS for animated widgets; `auto` causes layout recalc every frame.
+- **Named color jumps**: Use `rgb()` via HSV interpolation for smooth gradients; named color palettes look choppy when cycling.
+- **Screenshot fails silently**: `~/Downloads` may not exist on headless/server systems — always mkdir first.
 
 User arguments: $ARGUMENTS
