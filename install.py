@@ -162,7 +162,7 @@ SKILL_FAMILIES = {
     "Productivity & Meta": {
         "icon": "\u2b50",
         "description": "Session management, handoffs, and skill development",
-        "members": ["motivation", "session-history", "structured-handoff", "skill-creator"],
+        "members": ["motivation", "session-history", "structured-handoff", "skill-creator", "textual-tui-guide"],
     },
     "AI & External Services": {
         "icon": "\U0001f916",

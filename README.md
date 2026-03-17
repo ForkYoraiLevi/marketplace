@@ -41,6 +41,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [ssh-tunnel](./skills/ssh-tunnel/) | Set up SSH port forwarding tunnels (local, remote, SOCKS proxy) |
 | [structured-handoff](./skills/structured-handoff/) | Generate structured task files for autonomous agent sessions |
 | [telegram-notify](./skills/telegram-notify/) | Send a Telegram notification with a task summary |
+| [textual-tui-guide](./skills/textual-tui-guide/) | Build rich terminal UIs with Python Textual — layouts, widgets, modals, styling |
 | [web-scraper](./skills/web-scraper/) | Fetch a web page and extract its main content as clean readable text |
 | [youtube-search](./skills/youtube-search/) | Search YouTube for technical videos, tutorials, and talks on a topic |
 | [youtube-wisdom](./skills/youtube-wisdom/) | Extract key knowledge from a YouTube video transcript |
