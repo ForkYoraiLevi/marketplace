@@ -106,8 +106,6 @@ def main():
         help="Max seconds to wait (default: 180, range: 10–600)",
     )
     parser.add_argument("--json", action="store_true", dest="as_json", help="Output as JSON")
-    parser.add_argument("--chat-id", help="Override TELEGRAM_CHAT_ID env var")
-    parser.add_argument("--token", help="Override TELEGRAM_BOT_TOKEN env var")
     args = parser.parse_args()
 
     # Clamp timeout to safe bounds — never wait forever.
@@ -119,12 +117,12 @@ def main():
             file=sys.stderr,
         )
 
-    token = args.token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
     if not token:
         print("Error: TELEGRAM_BOT_TOKEN not set.", file=sys.stderr)
         sys.exit(1)
 
-    chat_id = args.chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     if not chat_id:
         print("Error: TELEGRAM_CHAT_ID not set.", file=sys.stderr)
         sys.exit(1)

@@ -59,8 +59,6 @@ uv run ~/.config/devin/skills/telegram-notify/scripts/send_telegram.py --message
 
 - `--message` / `-m` — message text (required)
 - `--parse-mode` — `Markdown`, `MarkdownV2`, or `HTML` (optional, default: plain text)
-- `--chat-id` — override the env var for this call
-- `--token` — override the env var for this call
 
 ## Composing the message
 
@@ -108,8 +106,6 @@ actionable text on stdout.
 - `--prompt` / `-p` — message to send before waiting (optional)
 - `--timeout` / `-t` — max seconds to wait (default: 180 = 3 minutes)
 - `--json` — output as JSON (includes `autonomous_prompt` field on timeout)
-- `--chat-id` — override the env var for this call
-- `--token` — override the env var for this call
 
 On timeout the script exits 0 and outputs a continuation prompt. Read stdout
 and follow its instructions — pick reasonable defaults, document assumptions,

@@ -44,21 +44,19 @@ def main():
         default=None,
         help="Message formatting mode (default: plain text)",
     )
-    parser.add_argument("--chat-id", help="Override TELEGRAM_CHAT_ID env var")
-    parser.add_argument("--token", help="Override TELEGRAM_BOT_TOKEN env var")
     args = parser.parse_args()
 
-    token = args.token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
     if not token:
         print("Error: TELEGRAM_BOT_TOKEN environment variable is not set.", file=sys.stderr)
         print("Create a bot via @BotFather on Telegram to get a token.", file=sys.stderr)
         sys.exit(1)
 
-    chat_id = args.chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     if not chat_id:
         print("Error: TELEGRAM_CHAT_ID environment variable is not set.", file=sys.stderr)
         print("Message your bot, then visit:", file=sys.stderr)
-        print(f"  https://api.telegram.org/bot{token}/getUpdates", file=sys.stderr)
+        print("  https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates", file=sys.stderr)
         print("Find your chat.id in the response.", file=sys.stderr)
         sys.exit(1)
 
