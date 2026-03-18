@@ -2,6 +2,10 @@
 
 ## 2026-03-19
 
+### Banner K glyph fix (f5043c8)
+
+Corrected the K letter in SKILLS and MARKET banner text. The previous fix (`404b181`) changed K from looking like R (`╦═╗`) to `╦ ╦`, but that read as H (two parallel verticals). Now uses `╦╔═` — the canonical form from the `calvin_s` pyfiglet font — which properly shows the upper diagonal arm of the K.
+
 ### Installer bug fixes (404b181)
 
 Fixed four user-reported issues: K glyph in banner looked like R (changed to open-top form), path completion dropdown was hard-capped at 20 results (removed cap, increased visible height), installed marker only checked primary platform (now checks all detected platforms), and confirm dialog showed all global rules as workspace-only when any platform forced workspace (now shows in global section with a note about which platforms redirect to workspace).

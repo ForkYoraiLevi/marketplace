@@ -9,6 +9,7 @@ The marketplace is a skills and rules repository with a TUI installer (`install.
 - **Installer upgrade** (`9edc9de`): Per-item scope toggle, workspace paths with autocomplete, catalog.toml externalization, MarketplaceList click behavior, platform-aware scope forcing (Devin rules forced to workspace).
 - **Bug fixes** (`d6f254a`): Crash on empty catalog, duplicate confirm summary, install_rule race condition, uncategorized catalog items.
 - **Bug fixes** (`404b181`): Banner K glyph, dropdown completion cap removed, installed marker checks all platforms, confirm summary shows correct scope breakdown.
+- **Bug fix** (`f5043c8`): Banner K top row corrected from `╦ ╦` to `╦╔═` (canonical calvin_s pyfiglet form).
 
 ### Key Architecture
 

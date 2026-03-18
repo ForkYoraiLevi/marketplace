@@ -6,11 +6,11 @@
 - **Cause:** `has_forced_ws` is True if ANY platform lacks global rules. The summary code treated this as "all items are workspace," but actual install correctly handles per-platform forcing.
 - **Fix:** Show items in user-chosen scope (global), add a note naming which platforms redirect to workspace. Commit `404b181`.
 
-## Banner K identical to R
+## Banner K glyph doesn't read as K
 
-- **Symptom:** The letter K in both SKILLS and MARKET banner text looked like R.
-- **Cause:** K top row used `╦═╗` (closed top, same as R) instead of `╦ ╦` (open top).
-- **Fix:** Changed K top glyph from `\u2566\u2550\u2557` to `\u2566 \u2566`. Commit `404b181`.
+- **Symptom:** The letter K in both SKILLS and MARKET banner text didn't look like K (first fix made it `╦ ╦` / `╠╩╗` / `╩ ╩` — two parallel verticals on top, reads as H).
+- **Cause:** The banner uses the `calvin_s` pyfiglet font. The canonical K top row is `╦╔═` (vertical + upper diagonal arm), not `╦ ╦` (two parallel verticals).
+- **Fix:** Changed K top row from `╦ ╦` to `╦╔═` in both SKILLS and MARKET lines. Commit `404b181`, then corrected again.
 
 ## Installed marker only checks primary platform
 
