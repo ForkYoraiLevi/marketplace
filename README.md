@@ -45,6 +45,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [skill-creator](./skills/skill-creator/) | Create, test, and iteratively improve agent skills with evals |
 | [ssh-tunnel](./skills/ssh-tunnel/) | Set up SSH port forwarding tunnels (local, remote, SOCKS proxy) |
 | [structured-handoff](./skills/structured-handoff/) | Generate structured task files for autonomous agent sessions |
+| [sync-rules](./skills/sync-rules/) | Sync rules from global AI agent configs into the workspace |
 | [telegram-notify](./skills/telegram-notify/) | Send a Telegram notification with a task summary |
 | [textual-tui-guide](./skills/textual-tui-guide/) | Build rich terminal UIs with Python Textual — layouts, widgets, modals, styling |
 | [web-scraper](./skills/web-scraper/) | Fetch a web page and extract its main content as clean readable text |
