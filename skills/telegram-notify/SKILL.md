@@ -31,7 +31,7 @@ If **either is empty or unset**, the skill is not configured yet. Do NOT try to 
 1. Tell the user Telegram notifications aren't set up yet and you need to walk them through it.
 2. Run the interactive setup script. It is an interactive script — **run it in an interactive shell** and let the user respond to each prompt:
    ```
-   uv run ~/.config/cognition/skills/telegram-notify/scripts/setup.py
+   uv run ~/.config/devin/skills/telegram-notify/scripts/setup.py
    ```
 3. The setup script handles everything step by step:
    - Asks the user to create a bot via @BotFather on Telegram and paste the token
@@ -44,7 +44,7 @@ If **either is empty or unset**, the skill is not configured yet. Do NOT try to 
 If both env vars **are set**, send a quick test message to make sure the connection still works before relying on it:
 
 ```
-uv run ~/.config/cognition/skills/telegram-notify/scripts/send_telegram.py -m "telegram-notify is connected"
+uv run ~/.config/devin/skills/telegram-notify/scripts/send_telegram.py -m "telegram-notify is connected"
 ```
 
 If the test fails (expired token, bot deleted, etc.), re-run the setup script.
@@ -52,7 +52,7 @@ If the test fails (expired token, bot deleted, etc.), re-run the setup script.
 ## Sending a notification
 
 ```
-uv run ~/.config/cognition/skills/telegram-notify/scripts/send_telegram.py --message "Your message here"
+uv run ~/.config/devin/skills/telegram-notify/scripts/send_telegram.py --message "Your message here"
 ```
 
 ### Options
@@ -94,7 +94,7 @@ When you need a response from the user and they may not be watching the terminal
 send a prompt via Telegram and wait for their reply:
 
 ```
-uv run ~/.config/cognition/skills/telegram-notify/scripts/wait_for_input.py --prompt "What should I do next?"
+uv run ~/.config/devin/skills/telegram-notify/scripts/wait_for_input.py --prompt "What should I do next?"
 ```
 
 The script sends the prompt, long-polls for a reply, and prints the user's

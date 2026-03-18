@@ -29,7 +29,7 @@ Invoke this **yourself** whenever you're about to:
 
 1. Run the checker:
    ```
-   uv run ~/.config/cognition/skills/motivation/scripts/motivate.py
+   uv run ~/.config/devin/skills/motivation/scripts/motivate.py
    ```
 
 2. Read the output. It reports concrete issues:
@@ -48,8 +48,8 @@ Invoke this **yourself** whenever you're about to:
 ## Options
 
 ```
-uv run ~/.config/cognition/skills/motivation/scripts/motivate.py          # human-readable output
-uv run ~/.config/cognition/skills/motivation/scripts/motivate.py --json   # machine-readable JSON
+uv run ~/.config/devin/skills/motivation/scripts/motivate.py          # human-readable output
+uv run ~/.config/devin/skills/motivation/scripts/motivate.py --json   # machine-readable JSON
 ```
 
 User arguments: $ARGUMENTS
