@@ -16,8 +16,10 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [document-progress](./rules/document-progress/) | Write progress to disk using todo lists and HANDOFF.md so nothing is lost between sessions |
 | [improve-the-process](./rules/improve-the-process/) | Fix friction structurally — every session should improve the workflow |
 | [no-ai-credit](./rules/no-ai-credit/) | Prevent AI agents from adding self-attribution to any output |
+| [pitfalls-discipline](./rules/pitfalls-discipline/) | Read PITFALLS.md before complex work, write to it after fixing bugs |
 | [prior-art](./rules/prior-art/) | Search for existing solutions before building custom code |
 | [python-uv](./rules/python-uv/) | Use uv for all Python operations — never pip, venv, conda, or poetry |
+| [session-resilience](./rules/session-resilience/) | Write state to disk continuously — you don't have memory, these files do |
 | [stay-motivated](./rules/stay-motivated/) | Completeness checklist — verify done conditions before stopping |
 | [task-formation](./rules/task-formation/) | Decompose requests into goals with intent, then into actionable session-sized tasks |
 | [telegram-on-complete](./rules/telegram-on-complete/) | Send a Telegram notification after completing any task |
@@ -35,8 +37,11 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [github-search](./skills/github-search/) | Search GitHub for repositories, prior art, and implementation inspiration |
 | [google-drive-reader](./skills/google-drive-reader/) | Read Google Docs from personal Drive, extract URLs and conclusions |
 | [motivation](./skills/motivation/) | Completeness checker — report what's actually unfinished before stopping |
+| [pitfall-check](./skills/pitfall-check/) | Search PITFALLS.md and git log for known issues before starting work |
+| [project-bootstrap](./skills/project-bootstrap/) | Initialize project docs — AGENTS.md, HANDOFF.md, CHANGELOG.md, PITFALLS.md |
 | [send-email](./skills/send-email/) | Send an email to someone using the Resend API |
 | [session-history](./skills/session-history/) | Query past Devin CLI conversations from the local session database |
+| [session-wrapup](./skills/session-wrapup/) | End-of-session audit — check docs, commits, and readiness for the next agent |
 | [skill-creator](./skills/skill-creator/) | Create, test, and iteratively improve agent skills with evals |
 | [ssh-tunnel](./skills/ssh-tunnel/) | Set up SSH port forwarding tunnels (local, remote, SOCKS proxy) |
 | [structured-handoff](./skills/structured-handoff/) | Generate structured task files for autonomous agent sessions |
