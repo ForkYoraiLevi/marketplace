@@ -31,7 +31,7 @@ If a prerequisite is missing, tell the user what to do.
 Show the exact command(s) the agent should run:
 
 ```
-uv run _template/scripts/example.py --flag "value"
+uv run $SKILL_DIR/scripts/example.py --flag "value"
 ```
 
 ### Options

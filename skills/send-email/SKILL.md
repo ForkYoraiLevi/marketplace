@@ -22,7 +22,7 @@ Send an email using the Resend API via a self-contained Python script.
 Before sending any email, verify the skill is ready:
 
 ```
-uv run ~/.config/devin/skills/send-email/scripts/send_email.py --check
+uv run $SKILL_DIR/scripts/send_email.py --check
 ```
 
 **Do NOT echo, print, or log `RESEND_API_KEY`.** The `--check` flag validates that the key is set and accepted by the Resend API, without revealing the secret.
@@ -42,7 +42,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 Run the script from the skill directory:
 
 ```
-uv run ~/.config/devin/skills/send-email/scripts/send_email.py --to "recipient@example.com" --subject "Subject line" --body "Email body text"
+uv run $SKILL_DIR/scripts/send_email.py --to "recipient@example.com" --subject "Subject line" --body "Email body text"
 ```
 
 ### Options
@@ -56,7 +56,7 @@ uv run ~/.config/devin/skills/send-email/scripts/send_email.py --to "recipient@e
 ### Multiple recipients
 
 ```
-uv run ~/.config/devin/skills/send-email/scripts/send_email.py --to "a@example.com" "b@example.com" --subject "Hello" --body "Hi everyone!"
+uv run $SKILL_DIR/scripts/send_email.py --to "a@example.com" "b@example.com" --subject "Hello" --body "Hi everyone!"
 ```
 
 ## Instructions

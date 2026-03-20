@@ -32,7 +32,7 @@ No API keys or environment variables are required.
 ## Usage
 
 ```
-bash act-runner/scripts/act-runner.sh [command] [options]
+bash $SKILL_DIR/scripts/act-runner.sh [command] [options]
 ```
 
 ### Commands
@@ -72,11 +72,11 @@ If no workflows exist, tell the user and offer to help create one.
 ### Step 2: Run it
 
 ```
-bash act-runner/scripts/act-runner.sh run                              # all workflows
-bash act-runner/scripts/act-runner.sh run .github/workflows/ci.yml     # specific workflow
-bash act-runner/scripts/act-runner.sh run -j test                      # specific job
-bash act-runner/scripts/act-runner.sh dry-run                          # validate only
-bash act-runner/scripts/act-runner.sh list                             # show jobs
+bash $SKILL_DIR/scripts/act-runner.sh run                              # all workflows
+bash $SKILL_DIR/scripts/act-runner.sh run .github/workflows/ci.yml     # specific workflow
+bash $SKILL_DIR/scripts/act-runner.sh run -j test                      # specific job
+bash $SKILL_DIR/scripts/act-runner.sh dry-run                          # validate only
+bash $SKILL_DIR/scripts/act-runner.sh list                             # show jobs
 ```
 
 ### Step 3: Interpret results

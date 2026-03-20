@@ -20,7 +20,7 @@ Extract structured knowledge from a YouTube video.
 ## Step 1: Fetch the transcript
 
 ```
-uv run ~/.config/devin/skills/youtube-wisdom/scripts/fetch_transcript.py "$1"
+uv run $SKILL_DIR/scripts/fetch_transcript.py "$1"
 ```
 
 If that fails, try with `--lang en`. If transcripts are disabled or unavailable, tell the user.

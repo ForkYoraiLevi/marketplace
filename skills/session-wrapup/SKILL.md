@@ -26,7 +26,7 @@ Audit the project's handoff readiness before ending a session. Different from `/
 ## Usage
 
 ```
-uv run ~/.config/devin/skills/session-wrapup/scripts/session_wrapup.py
+uv run $SKILL_DIR/scripts/session_wrapup.py
 ```
 
 ### Options

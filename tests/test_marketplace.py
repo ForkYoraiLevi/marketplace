@@ -944,6 +944,20 @@ class TestSkillConventionsExtended(unittest.TestCase):
                     f"{skill.name}: no scripts/ dir and prompt body is too short ({len(body)} chars)",
                 )
 
+    def test_skill_no_hardcoded_platform_paths(self):
+        """SKILL.md must use $SKILL_DIR, not hardcoded platform paths."""
+        hardcoded = re.compile(
+            r"~/\.(?:config/devin|claude|cursor|windsurf)/skills/[a-z]"
+        )
+        for skill in SKILLS:
+            with self.subTest(skill=skill.name):
+                text = (skill / "SKILL.md").read_text()
+                matches = hardcoded.findall(text)
+                self.assertEqual(
+                    matches, [],
+                    f"{skill.name}/SKILL.md has hardcoded platform path(s) — use $SKILL_DIR instead",
+                )
+
 
 # --------------------------------------------------------------------------- #
 # Test: install.py unit tests (non-interactive logic)
@@ -1241,6 +1255,34 @@ class TestInstallerSkills(unittest.TestCase):
             self.assertEqual(result, "installed")
             self.assertTrue((skills_dir / skill.name).is_dir())
             self.assertTrue((skills_dir / skill.name / "SKILL.md").exists())
+
+    def test_install_skill_resolves_skill_dir(self):
+        """install_skill must replace $SKILL_DIR with the actual install path."""
+        install_skill, _, _ = self._get_funcs()
+        # Find a skill that uses $SKILL_DIR in its SKILL.md
+        target = None
+        for skill in SKILLS:
+            text = (skill / "SKILL.md").read_text()
+            if "$SKILL_DIR" in text:
+                target = skill
+                break
+        if target is None:
+            self.skipTest("No skill uses $SKILL_DIR")
+        skill_dict = {"name": target.name, "path": target}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            skills_dir = Path(tmpdir) / "skills"
+            skills_dir.mkdir()
+            install_skill(skill_dict, skills_dir)
+            installed_md = (skills_dir / target.name / "SKILL.md").read_text()
+            self.assertNotIn(
+                "$SKILL_DIR", installed_md,
+                f"$SKILL_DIR was not resolved in installed {target.name}/SKILL.md",
+            )
+            expected_path = str(skills_dir / target.name)
+            self.assertIn(
+                expected_path, installed_md,
+                f"Installed SKILL.md does not contain the resolved path {expected_path}",
+            )
 
     def test_install_skill_overwrites(self):
         """Installing over an existing skill should replace it."""

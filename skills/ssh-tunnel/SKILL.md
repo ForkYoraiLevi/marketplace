@@ -22,7 +22,7 @@ Set up and manage SSH port-forwarding tunnels.
 ## The script
 
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh <command> <args...>
+bash $SKILL_DIR/scripts/ssh-tunnel.sh <command> <args...>
 ```
 
 ## Tunnel types
@@ -32,14 +32,14 @@ bash ssh-tunnel/scripts/ssh-tunnel.sh <command> <args...>
 Makes a remote service accessible on a local port. Traffic flows: **your machine -> SSH server -> target**.
 
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh local LOCAL_PORT REMOTE_HOST REMOTE_PORT SSH_DEST [SSH_OPTS...]
+bash $SKILL_DIR/scripts/ssh-tunnel.sh local LOCAL_PORT REMOTE_HOST REMOTE_PORT SSH_DEST [SSH_OPTS...]
 ```
 
 Use when: you want to access a database, web app, or service that's only reachable from the SSH server's network.
 
 Example — access a Postgres database behind a bastion:
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh local 5432 db.internal 5432 user@bastion
+bash $SKILL_DIR/scripts/ssh-tunnel.sh local 5432 db.internal 5432 user@bastion
 # Now connect to localhost:5432 as if it were db.internal:5432
 ```
 
@@ -48,14 +48,14 @@ bash ssh-tunnel/scripts/ssh-tunnel.sh local 5432 db.internal 5432 user@bastion
 Makes a local service accessible from the remote server. Traffic flows: **remote server -> SSH tunnel -> your machine**.
 
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh remote REMOTE_PORT LOCAL_HOST LOCAL_PORT SSH_DEST [SSH_OPTS...]
+bash $SKILL_DIR/scripts/ssh-tunnel.sh remote REMOTE_PORT LOCAL_HOST LOCAL_PORT SSH_DEST [SSH_OPTS...]
 ```
 
 Use when: you want to expose a local dev server to a remote machine (e.g., show a coworker your local app, or let a CI server reach your machine).
 
 Example — expose local dev server on the remote host:
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh remote 8080 localhost 3000 user@server
+bash $SKILL_DIR/scripts/ssh-tunnel.sh remote 8080 localhost 3000 user@server
 # On the server, localhost:8080 now reaches your local port 3000
 ```
 
@@ -64,14 +64,14 @@ bash ssh-tunnel/scripts/ssh-tunnel.sh remote 8080 localhost 3000 user@server
 Creates a local SOCKS5 proxy that routes all traffic through the SSH server.
 
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh socks LOCAL_PORT SSH_DEST [SSH_OPTS...]
+bash $SKILL_DIR/scripts/ssh-tunnel.sh socks LOCAL_PORT SSH_DEST [SSH_OPTS...]
 ```
 
 Use when: you want to browse the web or make requests as if you were on the remote server's network.
 
 Example:
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh socks 1080 user@server
+bash $SKILL_DIR/scripts/ssh-tunnel.sh socks 1080 user@server
 # Configure browser/app to use SOCKS5 proxy at localhost:1080
 # Or: curl --socks5-hostname localhost:1080 http://internal-site.example.com
 ```
@@ -79,10 +79,10 @@ bash ssh-tunnel/scripts/ssh-tunnel.sh socks 1080 user@server
 ## Management
 
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh list          # Show active tunnels
-bash ssh-tunnel/scripts/ssh-tunnel.sh stop PID      # Stop a specific tunnel
-bash ssh-tunnel/scripts/ssh-tunnel.sh stop all      # Stop all tunnels
-bash ssh-tunnel/scripts/ssh-tunnel.sh check PORT    # Test if a port is responding
+bash $SKILL_DIR/scripts/ssh-tunnel.sh list          # Show active tunnels
+bash $SKILL_DIR/scripts/ssh-tunnel.sh stop PID      # Stop a specific tunnel
+bash $SKILL_DIR/scripts/ssh-tunnel.sh stop all      # Stop all tunnels
+bash $SKILL_DIR/scripts/ssh-tunnel.sh check PORT    # Test if a port is responding
 ```
 
 ## Extra SSH options
@@ -90,7 +90,7 @@ bash ssh-tunnel/scripts/ssh-tunnel.sh check PORT    # Test if a port is respondi
 Pass additional SSH flags after the destination:
 
 ```
-bash ssh-tunnel/scripts/ssh-tunnel.sh local 8080 localhost 80 user@server -i ~/.ssh/mykey -p 2222
+bash $SKILL_DIR/scripts/ssh-tunnel.sh local 8080 localhost 80 user@server -i ~/.ssh/mykey -p 2222
 ```
 
 Common options:

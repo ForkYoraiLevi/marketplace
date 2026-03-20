@@ -23,7 +23,7 @@ Send a Telegram message to the user summarizing what was accomplished.
 Before sending any notification, you MUST verify the skill is ready:
 
 ```
-uv run ~/.config/devin/skills/telegram-notify/scripts/send_telegram.py --check
+uv run $SKILL_DIR/scripts/send_telegram.py --check
 ```
 
 **Do NOT echo, print, or log `TELEGRAM_BOT_TOKEN` or `TELEGRAM_CHAT_ID`.** The `--check` flag validates that credentials are set and the bot token is valid, without revealing secret values.
@@ -31,7 +31,7 @@ uv run ~/.config/devin/skills/telegram-notify/scripts/send_telegram.py --check
 If `--check` reports missing or invalid credentials, run the interactive setup script in an interactive shell:
 
 ```
-uv run ~/.config/devin/skills/telegram-notify/scripts/setup.py
+uv run $SKILL_DIR/scripts/setup.py
 ```
 
 The setup script handles everything: bot creation via @BotFather, token validation, chat ID discovery, test message, and saving credentials to the shell profile.
@@ -41,7 +41,7 @@ After setup completes, run `--check` again to confirm.
 ## Sending a notification
 
 ```
-uv run ~/.config/devin/skills/telegram-notify/scripts/send_telegram.py --message "Your message here"
+uv run $SKILL_DIR/scripts/send_telegram.py --message "Your message here"
 ```
 
 ### Options
@@ -81,7 +81,7 @@ When you need a response from the user and they may not be watching the terminal
 send a prompt via Telegram and wait for their reply:
 
 ```
-uv run ~/.config/devin/skills/telegram-notify/scripts/wait_for_input.py --prompt "What should I do next?"
+uv run $SKILL_DIR/scripts/wait_for_input.py --prompt "What should I do next?"
 ```
 
 The script sends the prompt, long-polls for a reply, and prints the user's

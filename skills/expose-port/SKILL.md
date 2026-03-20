@@ -33,7 +33,7 @@ Expose a local port so the user (or other machines) can reach it. Two backends:
 ## Expose via localhost.run (HTTPS, no setup)
 
 ```
-bash expose-port/scripts/expose-port.sh start PORT
+bash $SKILL_DIR/scripts/expose-port.sh start PORT
 ```
 
 Returns a URL like `https://abc123.lhr.life`. Only works for HTTP services.
@@ -41,25 +41,25 @@ Returns a URL like `https://abc123.lhr.life`. Only works for HTTP services.
 ## Expose via bore (any TCP protocol)
 
 ```
-bash expose-port/scripts/expose-port.sh start PORT --bore SERVER_IP
-bash expose-port/scripts/expose-port.sh start PORT --bore SERVER_IP --secret SECRET
-bash expose-port/scripts/expose-port.sh start PORT --bore SERVER_IP --bore-port 15432
+bash $SKILL_DIR/scripts/expose-port.sh start PORT --bore SERVER_IP
+bash $SKILL_DIR/scripts/expose-port.sh start PORT --bore SERVER_IP --secret SECRET
+bash $SKILL_DIR/scripts/expose-port.sh start PORT --bore SERVER_IP --bore-port 15432
 ```
 
 Returns an address like `SERVER_IP:PORT` plus a clickable `http://SERVER_IP:PORT` URL. Works with any TCP protocol.
 
 If `BORE_SERVER` is set (via `~/.auth/bore` or env), the `--bore` flag is not needed:
 ```
-bash expose-port/scripts/expose-port.sh start PORT
+bash $SKILL_DIR/scripts/expose-port.sh start PORT
 ```
 
 ## Management
 
 ```
-bash expose-port/scripts/expose-port.sh list          # Show active tunnels
-bash expose-port/scripts/expose-port.sh stop PID      # Stop a tunnel
-bash expose-port/scripts/expose-port.sh stop all      # Stop all tunnels
-bash expose-port/scripts/expose-port.sh status PORT   # Check if port is listening
+bash $SKILL_DIR/scripts/expose-port.sh list          # Show active tunnels
+bash $SKILL_DIR/scripts/expose-port.sh stop PID      # Stop a tunnel
+bash $SKILL_DIR/scripts/expose-port.sh stop all      # Stop all tunnels
+bash $SKILL_DIR/scripts/expose-port.sh status PORT   # Check if port is listening
 ```
 
 ## Choosing a backend

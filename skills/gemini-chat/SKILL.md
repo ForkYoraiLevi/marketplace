@@ -23,7 +23,7 @@ Interactive multi-turn conversation with Google Gemini. Uses the official
 Before starting a chat, verify the skill is ready:
 
 ```
-uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py --check
+uv run $SKILL_DIR/scripts/chat.py --check
 ```
 
 **Do NOT echo, print, or log `GEMINI_API_KEY`.** The `--check` flag validates that the key is set and accepted by the Gemini API, without revealing the secret.
@@ -37,7 +37,7 @@ If `--check` reports the key is missing or invalid, tell the user to:
 ### Interactive chat (REPL)
 
 ```
-uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py
+uv run $SKILL_DIR/scripts/chat.py
 ```
 
 Start a back-and-forth conversation. Type messages, get streaming responses.
@@ -46,26 +46,26 @@ Type `quit` to exit, `save <file.json>` to save the conversation.
 ### Single message
 
 ```
-uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py -m "explain quantum computing simply"
+uv run $SKILL_DIR/scripts/chat.py -m "explain quantum computing simply"
 ```
 
 ### With a system prompt
 
 ```
-uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py --system "You are a senior Rust developer"
+uv run $SKILL_DIR/scripts/chat.py --system "You are a senior Rust developer"
 ```
 
 ### Resume a previous conversation
 
 ```
-uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py --history chat.json
+uv run $SKILL_DIR/scripts/chat.py --history chat.json
 ```
 
 ### With Google Search grounding (like AI Mode)
 
 ```
-uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py --search
-uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py --search -m "what happened in tech news today?"
+uv run $SKILL_DIR/scripts/chat.py --search
+uv run $SKILL_DIR/scripts/chat.py --search -m "what happened in tech news today?"
 ```
 
 ### Options
@@ -86,17 +86,17 @@ When the user wants to talk to Gemini or get Gemini's perspective on something:
 
 1. Start an interactive session and relay the conversation:
    ```
-   uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py --system "<context about what to discuss>"
+   uv run $SKILL_DIR/scripts/chat.py --system "<context about what to discuss>"
    ```
 
 2. For a quick question, use single-message mode:
    ```
-   uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py -m "<question>" --json
+   uv run $SKILL_DIR/scripts/chat.py -m "<question>" --json
    ```
 
 3. To continue a previous conversation:
    ```
-   uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py --history /tmp/gemini-chat.json
+   uv run $SKILL_DIR/scripts/chat.py --history /tmp/gemini-chat.json
    ```
 
 4. When the user wants to compare perspectives or get a second opinion from

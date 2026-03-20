@@ -27,7 +27,7 @@ Create the three-tier documentation structure for a new or existing project so a
 ## Usage
 
 ```
-uv run ~/.config/devin/skills/project-bootstrap/scripts/bootstrap.py
+uv run $SKILL_DIR/scripts/bootstrap.py
 ```
 
 ### Options

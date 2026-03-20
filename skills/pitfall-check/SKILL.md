@@ -26,7 +26,7 @@ Search for known pitfalls related to what you're about to work on. Checks both P
 ## Usage
 
 ```
-uv run ~/.config/devin/skills/pitfall-check/scripts/pitfall_check.py <keyword> [keyword2 ...]
+uv run $SKILL_DIR/scripts/pitfall_check.py <keyword> [keyword2 ...]
 ```
 
 ### Options

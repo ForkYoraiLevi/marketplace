@@ -28,13 +28,13 @@ Different AI agents store rules in different places — Devin uses `~/.config/de
 The script handles scanning, deduplication, conflict detection, and writing in one step:
 
 ```
-uv run sync-rules/scripts/sync_rules.py                     # dry run — show what would sync
-uv run sync-rules/scripts/sync_rules.py --write agents       # write to AGENTS.md
-uv run sync-rules/scripts/sync_rules.py --write cursor       # write to .cursor/rules/
-uv run sync-rules/scripts/sync_rules.py --write windsurf     # write to .windsurf/rules/
-uv run sync-rules/scripts/sync_rules.py --write all          # all formats at once
-uv run sync-rules/scripts/sync_rules.py --agent devin        # only scan Devin globals
-uv run sync-rules/scripts/sync_rules.py --json               # structured output
+uv run $SKILL_DIR/scripts/sync_rules.py                     # dry run — show what would sync
+uv run $SKILL_DIR/scripts/sync_rules.py --write agents       # write to AGENTS.md
+uv run $SKILL_DIR/scripts/sync_rules.py --write cursor       # write to .cursor/rules/
+uv run $SKILL_DIR/scripts/sync_rules.py --write windsurf     # write to .windsurf/rules/
+uv run $SKILL_DIR/scripts/sync_rules.py --write all          # all formats at once
+uv run $SKILL_DIR/scripts/sync_rules.py --agent devin        # only scan Devin globals
+uv run $SKILL_DIR/scripts/sync_rules.py --json               # structured output
 ```
 
 ### What the script does
@@ -61,7 +61,7 @@ Deduplication uses content similarity (not just name matching) so it catches rul
 Start with a dry run so the user sees what's available before anything changes:
 
 ```
-uv run sync-rules/scripts/sync_rules.py
+uv run $SKILL_DIR/scripts/sync_rules.py
 ```
 
 Show the user the output. It lists new rules (not yet in workspace) and rules that already exist. If rules were deduplicated across agents, it notes that too.
@@ -73,7 +73,7 @@ Ask the user which format to write to. Suggest `agents` (AGENTS.md) as the defau
 Then run with `--write`:
 
 ```
-uv run sync-rules/scripts/sync_rules.py --write agents
+uv run $SKILL_DIR/scripts/sync_rules.py --write agents
 ```
 
 ### Step 3: Handle conflicts

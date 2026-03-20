@@ -100,7 +100,7 @@ The Markdown content after the frontmatter closing `---`. This is what the agent
 
 ### Dynamic content
 
-Three substitution mechanisms are available in the prompt body:
+Four substitution mechanisms are available in the prompt body:
 
 #### 1. User arguments
 
@@ -119,7 +119,29 @@ Explain the code in $1 in detail.
 Full user input: $ARGUMENTS
 ```
 
-#### 2. File inclusion
+#### 2. Skill directory
+
+Use `$SKILL_DIR` to reference scripts and files within the skill's own directory:
+
+| Variable | Value |
+|----------|-------|
+| `$SKILL_DIR` | Absolute path to the installed skill directory |
+
+`$SKILL_DIR` is resolved at **install time** by the marketplace installer, which replaces it with the actual install path (e.g., `~/.claude/skills/my-skill` or `.devin/skills/my-skill`). This ensures commands work regardless of which platform or scope the skill is installed to.
+
+Example:
+```markdown
+uv run $SKILL_DIR/scripts/send_email.py --to "user@example.com" --subject "Hello" --body "Hi"
+```
+
+After installing to Claude Code, this becomes:
+```markdown
+uv run ~/.claude/skills/send-email/scripts/send_email.py --to "user@example.com" --subject "Hello" --body "Hi"
+```
+
+**Always use `$SKILL_DIR` for script paths.** Do not hardcode platform-specific paths like `~/.config/devin/skills/my-skill/`.
+
+#### 3. File inclusion
 
 Include the contents of a file using `@` syntax. Paths are **relative to the config directory** (e.g., `.windsurf/`, `.devin/`, or `~/.config/devin/`), not relative to the skill directory.
 
@@ -136,7 +158,7 @@ To include a file from within the skill's own directory, use the `references/` s
 @skills/my-skill/references/guide.md
 ```
 
-#### 3. Command output
+#### 4. Command output
 
 Execute a shell command at invocation time and inject its stdout:
 
@@ -223,7 +245,7 @@ The `RESEND_API_KEY` environment variable must be set.
 
 ## Usage
 
-uv run send-email/scripts/send_email.py --to "recipient@example.com" --subject "Subject" --body "Body"
+uv run $SKILL_DIR/scripts/send_email.py --to "recipient@example.com" --subject "Subject" --body "Body"
 
 ## Instructions
 

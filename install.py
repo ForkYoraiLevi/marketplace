@@ -295,6 +295,12 @@ def install_skill(skill: dict, skills_dir: Path) -> str:
     if dest.exists():
         shutil.rmtree(dest)
     shutil.copytree(skill["path"], dest)
+    # Resolve $SKILL_DIR placeholder in SKILL.md to the actual install path.
+    skill_md = dest / "SKILL.md"
+    if skill_md.exists():
+        text = skill_md.read_text()
+        if "$SKILL_DIR" in text:
+            skill_md.write_text(text.replace("$SKILL_DIR", str(dest)))
     return "installed"
 
 

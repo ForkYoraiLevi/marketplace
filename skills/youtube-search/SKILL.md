@@ -20,7 +20,7 @@ Find the best YouTube videos on a topic — tutorials, conference talks, deep di
 ## Usage
 
 ```
-uv run ~/.config/devin/skills/youtube-search/scripts/search_youtube.py <query> [options]
+uv run $SKILL_DIR/scripts/search_youtube.py <query> [options]
 ```
 
 ### Options
@@ -40,7 +40,7 @@ uv run ~/.config/devin/skills/youtube-search/scripts/search_youtube.py <query> [
 Run the search with the user's topic:
 
 ```
-uv run ~/.config/devin/skills/youtube-search/scripts/search_youtube.py <query>
+uv run $SKILL_DIR/scripts/search_youtube.py <query>
 ```
 
 ### Step 2: Triage — pick which videos to recommend
@@ -70,7 +70,7 @@ Group them: lead with the top 2-3 picks (with brief reasoning), then list the re
 If the user asks to learn from a specific video, use the `youtube-wisdom` skill to fetch and analyze its transcript (requires the **youtube-wisdom** skill to be installed):
 
 ```
-uv run ~/.config/devin/skills/youtube-wisdom/scripts/fetch_transcript.py "<video-url>"
+uv run $SKILL_DIR/../youtube-wisdom/scripts/fetch_transcript.py "<video-url>"
 ```
 
 Then extract: core thesis, key technical points, actionable takeaways, and notable quotes.
