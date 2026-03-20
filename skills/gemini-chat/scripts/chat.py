@@ -28,8 +28,13 @@ from google.genai import types
 DEFAULT_MODEL = "gemini-2.5-flash"
 
 
+def _get_api_key() -> str | None:
+    """Return the API key from env vars, or None if not set."""
+    return os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+
+
 def _build_client() -> genai.Client:
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         print(
             "Error: GEMINI_API_KEY not set.\n"
@@ -39,6 +44,28 @@ def _build_client() -> genai.Client:
         )
         sys.exit(1)
     return genai.Client(api_key=api_key)
+
+
+def check_config() -> None:
+    """Verify GEMINI_API_KEY is set and valid, without printing the key."""
+    api_key = _get_api_key()
+    if not api_key:
+        print("GEMINI_API_KEY: not set", file=sys.stderr)
+        print("Get a free key at https://aistudio.google.com/apikey", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        client = genai.Client(api_key=api_key)
+        # List models to validate the key works
+        models = list(client.models.list())
+        print(f"GEMINI_API_KEY: valid ({len(models)} models available)")
+    except Exception as e:
+        err = str(e)
+        if "401" in err or "403" in err or "invalid" in err.lower():
+            print("GEMINI_API_KEY: set but INVALID (API rejected it)", file=sys.stderr)
+            print("Check your key at https://aistudio.google.com/apikey", file=sys.stderr)
+            sys.exit(1)
+        print(f"GEMINI_API_KEY: set (could not validate — {e})", file=sys.stderr)
 
 
 def _load_history(path: Path) -> list[types.Content]:
@@ -186,7 +213,16 @@ def main() -> None:
     parser.add_argument("--no-stream", action="store_true", help="Disable streaming output")
     parser.add_argument("--search", action="store_true", help="Enable Google Search grounding (like AI Mode)")
     parser.add_argument("--json", action="store_true", dest="as_json", help="Output as JSON (single message mode)")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Check that GEMINI_API_KEY is configured and valid, then exit",
+    )
     args = parser.parse_args()
+
+    if args.check:
+        check_config()
+        sys.exit(0)
 
     client = _build_client()
     stream = not args.no_stream

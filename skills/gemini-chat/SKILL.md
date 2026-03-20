@@ -20,8 +20,17 @@ Interactive multi-turn conversation with Google Gemini. Uses the official
 
 ## Prerequisites
 
-- **uv** installed
-- **GEMINI_API_KEY** env var set (get a free key at https://aistudio.google.com/apikey)
+Before starting a chat, verify the skill is ready:
+
+```
+uv run ~/.config/devin/skills/gemini-chat/scripts/chat.py --check
+```
+
+**Do NOT echo, print, or log `GEMINI_API_KEY`.** The `--check` flag validates that the key is set and accepted by the Gemini API, without revealing the secret.
+
+If `--check` reports the key is missing or invalid, tell the user to:
+1. Get a free key at https://aistudio.google.com/apikey
+2. Export it: `export GEMINI_API_KEY='your-key'`
 
 ## Usage
 
@@ -92,9 +101,5 @@ When the user wants to talk to Gemini or get Gemini's perspective on something:
 
 4. When the user wants to compare perspectives or get a second opinion from
    Gemini, send the question and relay the response back.
-
-5. If GEMINI_API_KEY is not set, instruct the user to get a free key at
-   https://aistudio.google.com/apikey and set it:
-   `export GEMINI_API_KEY='your-key'`
 
 User arguments: $ARGUMENTS
