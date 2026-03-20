@@ -109,7 +109,7 @@ members = ["send-email", "telegram-notify"]
 [skill_families."DevOps & Infrastructure"]
 icon = "\U0001F680"
 description = "Run CI locally, expose ports, manage tunnels"
-members = ["act-runner", "expose-port", "ssh-tunnel"]
+members = ["act-runner", "expose-port", "github-repo-setup", "ssh-tunnel"]
 
 [skill_families."Productivity & Meta"]
 icon = "\u2B50"

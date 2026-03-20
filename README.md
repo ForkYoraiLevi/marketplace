@@ -39,6 +39,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [duckduckgo-search](./skills/duckduckgo-search/) | Search DuckDuckGo and return results as structured text |
 | [expose-port](./skills/expose-port/) | Expose a local port via HTTPS (localhost.run) or TCP (bore) |
 | [gemini-chat](./skills/gemini-chat/) | Interactive multi-turn chat with Google Gemini |
+| [github-repo-setup](./skills/github-repo-setup/) | Create a GitHub repo with CI, branch protection, and naming rules |
 | [github-search](./skills/github-search/) | Search GitHub for repositories, prior art, and implementation inspiration |
 | [google-drive-reader](./skills/google-drive-reader/) | Read Google Docs from personal Drive, extract URLs and conclusions |
 | [motivation](./skills/motivation/) | Completeness checker — report what's actually unfinished before stopping |
