@@ -138,7 +138,7 @@ members = ["document-lifecycle", "document-progress"]
 [rule_families."Workflow & Process"]
 icon = "\u2699"
 description = "Shape how agents approach and execute tasks"
-members = ["continuous-improvement", "improve-the-process", "revert-on-failure", "session-resilience", "stay-motivated", "task-formation"]
+members = ["autonomous-persistence", "continuous-improvement", "improve-the-process", "revert-on-failure", "session-resilience", "stay-motivated", "task-formation"]
 
 [rule_families."Environment & Conventions"]
 icon = "\U0001F527"

@@ -10,6 +10,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 
 | Rule | Description |
 |------|-------------|
+| [autonomous-persistence](./rules/autonomous-persistence/) | Never ask permission to continue -- keep working autonomously until done or explicitly stopped |
 | [blast-radius](./rules/blast-radius/) | Scope changes by blast radius — prefer small atomic edits over large risky rewrites |
 | [continuous-improvement](./rules/continuous-improvement/) | Structured seven-phase workflow for finding, planning, and implementing codebase improvements |
 | [document-lifecycle](./rules/document-lifecycle/) | Three-tier documentation: rules, reference, history — no sprawl |
