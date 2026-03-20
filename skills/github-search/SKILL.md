@@ -29,7 +29,7 @@ uv run $SKILL_DIR/scripts/search.py <query> [options]
 
 | Flag | Description |
 |------|-------------|
-| `-n`, `--limit N` | Maximum number of results (default: 20) |
+| `-n`, `--min-results N` | Minimum number of results to request (default: 25) |
 | `-l`, `--language LANG` | Filter by language (e.g. `python`, `rust`, `go`) |
 | `-s`, `--sort ORDER` | Sort by: `stars`, `forks`, `updated`, `best-match` (default: `stars`) |
 | `--min-stars N` | Minimum star count (default: 0) |
@@ -69,7 +69,7 @@ If results are sparse, try:
 
 ### Step 2: Triage — pick which repos to explore
 
-You now have up to 20 results with names, descriptions, stars, languages, and topics. **Do not read all 20.** Select **3-6 repos** to actually explore, based on these criteria (in priority order):
+You now have 25+ results with names, descriptions, stars, languages, and topics. **Do not read them all.** Select **3-6 repos** to actually explore, based on these criteria (in priority order):
 
 1. **Stars + activity signal quality.** A repo with 5k+ stars and recent updates is battle-tested. But don't ignore small gems — a 50-star repo with a perfect description match can be more useful than a 10k-star kitchen sink.
 2. **Description relevance.** The description should match your actual problem, not just share keywords. A "minimal websocket library" is more useful than a "full-stack web framework" when you need websockets.

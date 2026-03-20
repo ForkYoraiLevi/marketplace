@@ -42,11 +42,13 @@ def _fetch(
 def search(
     query: str,
     *,
-    max_results: int = 20,
+    min_results: int = 25,
     region: str = "wt-wt",
     time_range: str | None = None,
     output_json: bool = False,
 ) -> str:
+    # Over-request to maximise our chances of hitting the floor.
+    request_size = min_results * 2
     results: list[dict] = []
     last_error: Exception | None = None
 
@@ -54,16 +56,20 @@ def search(
         try:
             results = _fetch(
                 query,
-                max_results=max_results,
+                max_results=request_size,
                 region=region,
                 time_range=time_range,
             )
-            if results:
+            if len(results) >= min_results:
                 break
-            # Empty results may be transient throttling — retry
+            # Got some but not enough — keep what we have and retry
             if attempt < MAX_RETRIES - 1:
                 delay = RETRY_DELAYS[attempt]
-                print(f"No results (attempt {attempt + 1}/{MAX_RETRIES}), retrying in {delay}s...", file=sys.stderr)
+                print(
+                    f"Only {len(results)} results (want >={min_results}), "
+                    f"retrying in {delay}s...",
+                    file=sys.stderr,
+                )
                 time.sleep(delay)
         except Exception as e:
             last_error = e
@@ -77,6 +83,7 @@ def search(
             return f"Search failed after {MAX_RETRIES} attempts. Last error: {last_error}"
         return "No results found after exhausting retries."
 
+    # Return everything we got — no truncation.
     if output_json:
         return json.dumps(results, indent=2, ensure_ascii=False)
 
@@ -113,10 +120,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Search DuckDuckGo")
     parser.add_argument("query", nargs="+", help="Search query")
     parser.add_argument(
-        "-n", "--max-results",
+        "-n", "--min-results",
         type=int,
-        default=20,
-        help="Maximum number of results (default: 20)",
+        default=25,
+        help="Minimum number of results to request (default: 25)",
     )
     parser.add_argument(
         "-r", "--region",
@@ -141,7 +148,7 @@ def main() -> None:
     try:
         output = search(
             query,
-            max_results=args.max_results,
+            min_results=args.min_results,
             region=args.region,
             time_range=args.time,
             output_json=args.json,

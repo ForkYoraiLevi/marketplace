@@ -24,7 +24,7 @@ uv run github-search/scripts/search.py "your search query"
 
 | Flag | Description |
 |------|-------------|
-| `-n`, `--limit N` | Maximum number of results (default: 20) |
+| `-n`, `--min-results N` | Minimum number of results to request (default: 25) |
 | `-l`, `--language LANG` | Filter by language (e.g. `python`, `rust`, `go`) |
 | `-s`, `--sort ORDER` | Sort by: `stars`, `forks`, `updated`, `best-match` (default: `stars`) |
 | `--min-stars N` | Minimum star count (default: 0) |

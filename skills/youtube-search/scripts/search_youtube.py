@@ -109,7 +109,7 @@ def technical_score(result: dict) -> float:
 def search_videos(
     query: str,
     *,
-    max_results: int = 15,
+    min_results: int = 25,
     region: str = "wt-wt",
     time_range: str | None = None,
 ) -> list[dict]:
@@ -126,7 +126,7 @@ def search_videos(
                 f"{query} site:youtube.com",
                 region=region,
                 timelimit=time_range,
-                max_results=max_results * 3,
+                max_results=min_results * 3,
             ))
             if raw:
                 break
@@ -157,13 +157,13 @@ def search_videos(
         v["_score"] = technical_score(v)
     videos.sort(key=lambda v: v["_score"], reverse=True)
 
-    return videos[:max_results]
+    return videos
 
 
 def search_text_fallback(
     query: str,
     *,
-    max_results: int = 15,
+    min_results: int = 25,
     region: str = "wt-wt",
     time_range: str | None = None,
 ) -> list[dict]:
@@ -180,7 +180,7 @@ def search_text_fallback(
                 f"site:youtube.com {query}",
                 region=region,
                 timelimit=time_range,
-                max_results=max_results * 2,
+                max_results=min_results * 2,
             ))
             if raw:
                 break
@@ -218,7 +218,7 @@ def search_text_fallback(
         })
 
     results.sort(key=lambda v: v["_score"], reverse=True)
-    return results[:max_results]
+    return results
 
 
 def format_results(videos: list[dict], *, show_scores: bool = False) -> str:
@@ -282,9 +282,9 @@ def main() -> None:
     )
     parser.add_argument("query", nargs="+", help="Search query / topic")
     parser.add_argument(
-        "-n", "--max-results",
-        type=int, default=15,
-        help="Maximum results to return (default: 15)",
+        "-n", "--min-results",
+        type=int, default=25,
+        help="Minimum number of results to request (default: 25)",
     )
     parser.add_argument(
         "-r", "--region",
@@ -314,17 +314,17 @@ def main() -> None:
     try:
         videos = search_videos(
             query,
-            max_results=args.max_results,
+            min_results=args.min_results,
             region=args.region,
             time_range=args.time,
         )
 
         # If video search returns too few, supplement with text search
-        if len(videos) < args.max_results // 2:
+        if len(videos) < args.min_results:
             seen = {v.get("content", "") for v in videos}
             fallback = search_text_fallback(
                 query,
-                max_results=args.max_results,
+                min_results=args.min_results,
                 region=args.region,
                 time_range=args.time,
             )
@@ -333,7 +333,6 @@ def main() -> None:
                     videos.append(fb)
                     seen.add(fb.get("content", ""))
             videos.sort(key=lambda v: v.get("_score", 0), reverse=True)
-            videos = videos[:args.max_results]
 
         if args.json:
             # Strip internal scoring field for clean output

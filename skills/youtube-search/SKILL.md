@@ -28,7 +28,7 @@ uv run $SKILL_DIR/scripts/search_youtube.py <query> [options]
 
 | Flag | Description |
 |------|-------------|
-| `-n`, `--max-results N` | Maximum results (default: 15) |
+| `-n`, `--min-results N` | Minimum number of results to request (default: 25) |
 | `-r`, `--region CODE` | Region code, e.g. `us-en`, `wt-wt` (default: `wt-wt`) |
 | `-t`, `--time {d,w,m,y}` | Time range: day, week, month, year |
 | `--json` | Output as JSON |
@@ -53,7 +53,7 @@ uv run $SKILL_DIR/scripts/search_youtube.py <query>
 
 ### Step 2: Triage — pick which videos to recommend
 
-You now have up to 15 titles, channels, durations, and descriptions. **Do not just dump all 15.** Read them carefully and select **3-7 videos** to actually recommend based on these preferences (in priority order):
+You now have 25+ titles, channels, durations, and descriptions. **Do not just dump them all.** Read them carefully and select **3-7 videos** to actually recommend based on these preferences (in priority order):
 
 1. **Creator authority over production value.** Prefer videos from the library/framework author, a core contributor, a conference speaker who built the thing, or a respected educator. A low-production talk by the actual creator beats a polished video from a content mill.
 2. **Technical depth over surface coverage.** A 45-min deep dive with code walkthrough beats a 5-min "Top 10 things about X". Look for signals like "deep dive", "internals", "from scratch", "implementation", "under the hood", "live coding" in titles and descriptions.

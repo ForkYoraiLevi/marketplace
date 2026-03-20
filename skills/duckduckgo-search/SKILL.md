@@ -32,7 +32,7 @@ uv run $SKILL_DIR/scripts/search.py <query> [options]
 
 | Flag | Description |
 |------|-------------|
-| `-n`, `--max-results N` | Maximum number of results (default: 20) |
+| `-n`, `--min-results N` | Minimum number of results to request (default: 25) |
 | `-r`, `--region CODE` | Region code, e.g. `us-en`, `uk-en`, `wt-wt` for global (default: `wt-wt`) |
 | `-t`, `--time {d,w,m,y}` | Time range: `d`=day, `w`=week, `m`=month, `y`=year |
 | `--json` | Output results as JSON |
@@ -48,15 +48,15 @@ Results are automatically saved to `agent-fetched/duckduckgo-search/` relative t
 
 ### Step 1: Search wide
 
-Run the search with `-n 20` to get a broad set of results:
+Run the search with at least 25 results (the default) to get a broad set:
 
 ```
-uv run $SKILL_DIR/scripts/search.py <query> -n 20
+uv run $SKILL_DIR/scripts/search.py <query>
 ```
 
 ### Step 2: Triage — pick which results to scrape
 
-You now have 20 titles, URLs, and snippets. **Do not scrape all 20.** Read the titles and snippets carefully and select **3-7 results** to actually scrape based on these preferences (in priority order):
+You now have 25+ titles, URLs, and snippets. **Do not scrape them all.** Read the titles and snippets carefully and select **3-7 results** to actually scrape based on these preferences (in priority order):
 
 1. **Primary sources over aggregators.** Prefer official docs, original blog posts, research papers, and manufacturer pages over SEO content farms, listicles, or news aggregators that just summarize other sources.
 2. **Technical depth over marketing.** A benchmark review with actual numbers beats a press release or product announcement. Look for words like "review", "benchmark", "tested", "measured", "hands-on", "in-depth" in titles.

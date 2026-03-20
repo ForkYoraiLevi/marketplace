@@ -45,14 +45,16 @@ def _relative_date(iso: str) -> str:
 def search_repos(
     query: str,
     *,
-    limit: int = 20,
+    min_results: int = 25,
     language: str | None = None,
     sort: str = "stars",
     min_stars: int = 0,
     topic: str | None = None,
     output_json: bool = False,
 ) -> str:
-    cmd = ["search", "repos", query, "--json", JSON_FIELDS, "-L", str(limit)]
+    # Over-request to maximise our chances of hitting the floor.
+    request_size = min_results * 2
+    cmd = ["search", "repos", query, "--json", JSON_FIELDS, "-L", str(request_size)]
     if sort:
         cmd += ["--sort", sort]
     if language:
@@ -131,10 +133,10 @@ def main() -> None:
     )
     parser.add_argument("query", nargs="+", help="Search query")
     parser.add_argument(
-        "-n", "--limit",
+        "-n", "--min-results",
         type=int,
-        default=20,
-        help="Maximum number of results (default: 20)",
+        default=25,
+        help="Minimum number of results to request (default: 25)",
     )
     parser.add_argument(
         "-l", "--language",
@@ -170,7 +172,7 @@ def main() -> None:
     try:
         output = search_repos(
             query,
-            limit=args.limit,
+            min_results=args.min_results,
             language=args.language,
             sort=args.sort,
             min_stars=args.min_stars,
