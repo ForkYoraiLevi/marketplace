@@ -87,10 +87,6 @@ Run the CI workflow locally with [act](https://github.com/nektos/act) and podman
 ./tests/run-ci-local.sh -n       # dry-run (no container)
 ```
 
-## Marketplace Testing
-
-Always run `uv run tests/test_marketplace.py` before declaring done.
-
 ## Research Directory
 
 The `research/` directory contains 90+ files across 12 research rounds. Read `research/README.md` before modifying any research file.
@@ -201,9 +197,6 @@ Build automated verification at multiple layers. Set up test infrastructure befo
 Test everything you create before declaring done. Do not assume correctness — prove it.
 
 - **Run the code.** If it produces output, inspect it. If it has side effects, confirm they occurred.
-- **Prove three things:** correct outcome, correct mechanism (went through the intended path), clean side effects (no leaks, no stale state).
-- **Test the negative path.** Invalid inputs must produce clean errors, not crashes.
-- **Be autonomous.** Exhaust all approaches before asking the user for help.
 - **Pause for what only the user can provide** — API keys, OAuth, credentials, policy decisions.
 - **State what was tested** and what remains untested. Never say "should work."
 
@@ -331,3 +324,105 @@ ALWAYS use `uv`. NEVER use `pip`, `pip install`, `virtualenv`, `venv`, `pyenv`, 
 - **Virtualenvs:** `uv venv` (never `python -m venv`)
 - **Global tools:** `uv tool install` (never `pip install --user` or `pipx`)
 - If an existing project uses pip/requirements.txt, follow its conventions — do not migrate without asking.
+
+## Simplicity Bar
+
+Every change has a complexity cost. Weigh it against the improvement before keeping it.
+
+- **Removing code that preserves results is always a win.** Fewer lines, same outcome = strictly better. Keep it unconditionally.
+- **Marginal gains do not justify ugly complexity.** A 0.1% improvement that adds 20 lines of hacky code is not worth it. A 0.1% improvement from *deleting* code is definitely worth it.
+- **Equal results + simpler code = keep.** If a refactor yields the same behavior with less complexity, that is a positive outcome, not a wash.
+- **Before adding code, ask:** "Would I accept this in a code review if someone else wrote it?" If the answer is "only because it technically works," don't ship it.
+- **Complexity is a liability.** Every line you add must be read, maintained, and debugged by the next agent. Earn each line.
+
+> *"All else being equal, simpler is better. A small improvement that adds ugly complexity is not worth it. Conversely, removing something and getting equal or better results is a great outcome -- that's a simplification win."*
+> -- [karpathy/autoresearch](https://github.com/karpathy/autoresearch/blob/master/program.md)
+
+### Examples
+
+| Change | Outcome | Verdict |
+|--------|---------|---------|
+| Add 30-line caching layer | 2% speedup | Weigh carefully -- is 2% worth 30 lines? |
+| Delete unused abstraction | Same behavior | **Keep** -- simpler with no downside |
+| Inline a helper used once | Same behavior, fewer indirections | **Keep** -- simplification win |
+| Add retry logic with backoff | Fixes flaky failures | **Keep** -- complexity is justified by reliability |
+| Add feature flag framework | Supports one toggle | **Reject** -- over-engineering for one use case |
+
+## Autonomous Persistence
+
+Do not pause to ask the human if you should continue. Keep working until the task is done or you are explicitly stopped.
+
+- **Never ask "should I keep going?"** The human may be away, asleep, or busy. They expect you to continue working autonomously. If there is more work to do, do it.
+- **Never ask "is this a good stopping point?"** If the todo list has pending items, it is not a stopping point. Period.
+- **Only pause for what you genuinely cannot provide yourself** -- credentials, API keys, policy decisions, ambiguous requirements. Everything else, figure it out.
+- **If you run out of ideas, think harder.** Re-read the codebase for angles you missed. Re-read the requirements. Try combining previous near-misses. Try a more radical approach. Do not give up and ask the human for inspiration.
+- **Exhaust your tools before asking.** Search the codebase, search the web, read documentation, read git history. The answer is almost always findable.
+
+> *"Do NOT pause to ask the human if you should continue. Do NOT ask 'should I keep going?' or 'is this a good stopping point?'. The human might be asleep, or gone from a computer and expects you to continue working indefinitely until you are manually stopped. You are autonomous. If you run out of ideas, think harder -- read papers referenced in the code, re-read the in-scope files for new angles, try combining previous near-misses, try more radical architectural changes."*
+> -- [karpathy/autoresearch](https://github.com/karpathy/autoresearch/blob/master/program.md)
+
+### Examples
+
+| Situation | Wrong | Right |
+|-----------|-------|-------|
+| Finished a subtask, more remain | "Should I continue to the next step?" | Start the next step immediately |
+| Hit an error you haven't seen | "I'm stuck, what should I do?" | Search error message, read docs, try alternatives |
+| First approach didn't work | "Want me to try something else?" | Try something else |
+| Unsure which of two valid approaches to use | "Which do you prefer?" | Pick the simpler one, note the tradeoff, keep moving |
+| Need an API key you don't have | Ask the human | **Correct** -- this is genuinely blocked |
+
+## Revert on Failure
+
+When making speculative changes, use git as a safety net. Commit a known-good state, experiment, measure, and revert if the change does not improve things.
+
+- **Commit before experimenting.** Always have a clean commit to revert to. Never experiment on a dirty working tree.
+- **Define "better" before changing code.** Know your success metric (test passes, performance improves, error disappears) before making the change. If you cannot state the metric, you are not ready to change code.
+- **Measure after every change.** Run the relevant check immediately. Do not batch multiple speculative changes -- test each one individually.
+- **Keep what improves, revert what doesn't.** If the metric improved, commit and advance. If it didn't, `git checkout -- .` or `git reset --hard` back to the last good state. Do not accumulate failed experiments in the working tree.
+- **If a change crashes, use judgment.** Trivial fix (typo, missing import)? Fix and re-run. Fundamentally broken idea? Revert immediately and move on.
+- **Never push through.** If you have tried the same approach 3 times without improvement, abandon it and try a different angle.
+
+> *"If val_bpb improved (lower), you 'advance' the branch, keeping the git commit. If val_bpb is equal or worse, you git reset back to where you started."*
+> -- [karpathy/autoresearch](https://github.com/karpathy/autoresearch/blob/master/program.md)
+
+### The Loop
+
+```
+1. git commit   (baseline / known-good state)
+2. Make one change
+3. Run the check (test, build, benchmark)
+4. Improved? -> git commit (new baseline)
+   Same or worse? -> git reset --hard HEAD
+5. Go to 2
+```
+
+### Examples
+
+| Scenario | Action |
+|----------|--------|
+| Refactoring a function, tests still pass after change | **Commit** -- new baseline |
+| Trying a different algorithm, tests fail | **Revert** -- go back to working state |
+| Build breaks due to missing import you just introduced | **Fix the typo and re-run** -- trivial crash |
+| Third attempt at an optimization yields no gain | **Abandon the approach** -- try something else |
+
+## Output Discipline
+
+Do not flood your context with raw command output. Redirect to files and extract only what you need.
+
+- **Redirect verbose commands to files.** Use `command > output.log 2>&1` for anything that produces more than a screenful. Never pipe long output into your context window.
+- **Extract with targeted reads.** Use `grep`, `tail`, `head`, or specific line reads to pull out the information you need. Do not read entire log files when one line answers the question.
+- **Never use `tee` for long-running commands.** It floods your context with the same output you saved to disk. Redirect, then read selectively.
+- **Diagnose failures from the end.** If a command fails, `tail -n 50 output.log` gets you the stack trace. Do not read from the top.
+- **Delete temporary output files when done.** Log files are diagnostic tools, not artifacts. Clean up after yourself.
+
+> *"Run the experiment: `uv run train.py > run.log 2>&1` (redirect everything -- do NOT use tee or let output flood your context). Read out the results: `grep '^val_bpb:\|^peak_vram_mb:' run.log`"*
+> -- [karpathy/autoresearch](https://github.com/karpathy/autoresearch/blob/master/program.md)
+
+### Examples
+
+| Task | Wrong | Right |
+|------|-------|-------|
+| Run tests | `pytest` (500 lines flood context) | `pytest > test.log 2>&1 && tail -n 20 test.log` |
+| Check a metric | Read entire 10,000-line log | `grep "^accuracy:" run.log` |
+| Debug a crash | `cat output.log` | `tail -n 50 output.log` |
+| Build a project | `make` (scrolling build output) | `make > build.log 2>&1 && echo "exit: $?"` |
