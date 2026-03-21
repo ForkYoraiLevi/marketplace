@@ -76,6 +76,37 @@ Before running, examine the project to determine the language and build system:
 
 If the project has an existing Makefile with quality targets, prefer those commands.
 
+If the project does not have a Makefile, generate one with these conventions:
+- `.DEFAULT_GOAL := help` — bare `make` shows help
+- `help` target that dynamically lists all targets with descriptions
+- Each target uses `## description` after the colon for self-documenting help
+- Pattern: `target: deps ## Short description`
+
+Example Makefile template:
+```makefile
+.PHONY: help install lint format test check clean
+
+.DEFAULT_GOAL := help
+
+help: ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+
+install: ## Install dependencies
+	...
+
+lint: ## Run linter
+	...
+
+test: ## Run tests
+	...
+
+check: lint test ## Run all quality checks
+	...
+
+clean: ## Remove build artifacts
+	...
+```
+
 ### Step 3: Run the setup
 
 ```
