@@ -37,11 +37,12 @@ gh auth login
 
 1. **GitHub repository** — creates from local git, sets `main` as default branch
 2. **CI workflow** — detects project language and generates `.github/workflows/ci.yml`
-3. **Branch protection rulesets** via GitHub API:
+3. **CD workflow** — auto-tags releases on push to main after CI passes (`.github/workflows/cd.yml`)
+4. **Branch protection rulesets** via GitHub API:
    - `main` — PR required, CI status checks, no deletion, no force push, linear history
    - `pub/**` — PR required, CI status checks, no deletion, no force push
    - `pvt/**` — no deletion, no force push (direct push allowed)
-4. **Branch naming convention** — only allows: `main`, `usr/<user>/<topic>`, `pvt/<topic>`, `pub/<topic>`
+5. **Branch naming convention** — only allows: `main`, `usr/<user>/<topic>`, `pvt/<topic>`, `pub/<topic>`
 
 ## Usage
 
@@ -150,5 +151,81 @@ Jobs: `vet` (go vet), `lint` (staticcheck), `test` (go test), `build` (go build)
 - If `gh` lacks required scopes, tell the user to re-authenticate: `gh auth refresh -s repo,workflow`
 - If CI generation fails, still proceed with repo creation and rulesets.
 - If a ruleset creation fails, report the error and continue with remaining rulesets.
+
+## CD Workflow and Version Tagging
+
+After generating the CI workflow, also generate a CD workflow (`.github/workflows/cd.yml`) that auto-tags releases on push to main.
+
+### Version scheme
+
+Tags follow date-based versioning with patch support:
+- `vYYYY.MM.DD` — first release of the day
+- `vYYYY.MM.DD-1`, `vYYYY.MM.DD-2` — same-day patches
+
+### CD workflow behavior
+
+The CD workflow triggers via `workflow_run` after CI completes on `main`:
+
+1. **Gate on CI**: `if: github.event.workflow_run.conclusion == 'success'` — only proceeds if all CI checks passed
+2. **Run e2e tests** (optional): additional integration/smoke tests beyond CI
+3. **Auto-tag**: computes the next version tag for today and pushes it
+
+```yaml
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute and push version tag
+        run: |
+          TODAY=$(date -u +%Y.%m.%d)
+          EXISTING=$(git tag -l "v${TODAY}" "v${TODAY}-*" | sort -V)
+          if [ -z "$EXISTING" ]; then
+            TAG="v${TODAY}"
+          else
+            LAST=$(echo "$EXISTING" | tail -1)
+            if [ "$LAST" = "v${TODAY}" ]; then
+              TAG="v${TODAY}-1"
+            else
+              N=$(echo "$LAST" | sed "s/v${TODAY}-//")
+              TAG="v${TODAY}-$((N + 1))"
+            fi
+          fi
+          echo "Tagging: $TAG"
+          git tag "$TAG"
+          git push origin "$TAG"
+```
+
+### Makefile release target
+
+When generating a Makefile, include a `release` target for manual tagging:
+
+```makefile
+release: ## Tag a release (vYYYY.MM.DD or vYYYY.MM.DD-N) and push
+	@TODAY=$$(date -u +%Y.%m.%d); \
+	EXISTING=$$(git tag -l "v$$TODAY" "v$$TODAY-*" | sort -V); \
+	if [ -z "$$EXISTING" ]; then TAG="v$$TODAY"; \
+	else LAST=$$(echo "$$EXISTING" | tail -1); \
+		if [ "$$LAST" = "v$$TODAY" ]; then TAG="v$$TODAY-1"; \
+		else N=$$(echo "$$LAST" | sed "s/v$$TODAY-//"); TAG="v$$TODAY-$$((N + 1))"; fi; \
+	fi; \
+	echo "Tagging: $$TAG"; git tag "$$TAG"; git push origin "$$TAG"
+```
 
 User arguments: $ARGUMENTS
