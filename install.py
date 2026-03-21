@@ -49,6 +49,7 @@ def _build_platforms(catalog: dict) -> dict:
                 "skills": Path(p["project_skills"]) if p.get("project_skills") else None,
             },
             "rule_fmt": p["rule_format"],
+            "detection_binary": p.get("detection_binary", ""),
         }
     return platforms
 
@@ -90,7 +91,10 @@ WORKSPACE_SCOPE_DEFAULTS: set[str] = set(_CATALOG.get("workspace_scope_defaults"
 def detect_platforms() -> dict[str, dict]:
     found = {}
     for pid, info in PLATFORMS.items():
-        if info["global"]["config"].parent.exists():
+        config_exists = info["global"]["config"].exists()
+        binary = info.get("detection_binary", "")
+        binary_found = bool(binary and shutil.which(binary))
+        if config_exists or binary_found:
             found[pid] = info
     return found
 
@@ -1159,9 +1163,21 @@ def main():
             "Ensure catalog.toml exists and has a [platforms] section."
         )
         raise SystemExit(1)
-    primary_pid = list(platforms.keys())[0] if platforms else list(PLATFORMS.keys())[0]
-    primary_paths = PLATFORMS[primary_pid]["global"]
-    primary_mcps = read_mcp_servers(primary_paths["config"]) if platforms else {}
+
+    def _mcp_install_status(mcp_name: str) -> tuple[bool, bool]:
+        """Return (installed_on_any, installed_on_all) for an MCP server across detected platforms."""
+        if not platforms:
+            return False, False
+        any_installed = False
+        all_installed = True
+        for pid in platforms:
+            cfg = PLATFORMS[pid]["global"]["config"]
+            servers = read_mcp_servers(cfg)
+            if mcp_name in servers:
+                any_installed = True
+            else:
+                all_installed = False
+        return any_installed, all_installed
 
     def _rule_install_status(rule_name: str) -> tuple[bool, bool]:
         """Return (installed_on_any, installed_on_all) for a rule across detected platforms."""
@@ -1513,20 +1529,26 @@ def main():
             # ── MCP Servers ──
             mcp_selections = []
             for name, srv in MCP_SERVERS.items():
-                is_inst = name in primary_mcps
-                indicator = "[green]\u25cf[/] " if is_inst else "[dim]\u25cb[/] "
+                any_inst, all_inst = _mcp_install_status(name) if platforms else (False, False)
+                if all_inst:
+                    indicator = "[green]\u25cf[/] "
+                elif any_inst:
+                    indicator = "[yellow]\u25d0[/] "
+                else:
+                    indicator = "[dim]\u25cb[/] "
                 scope_tag = "[W]" if name in WORKSPACE_SCOPE_DEFAULTS else "[G]"
                 label = Text.from_markup(
                     f"{indicator}[dim]{scope_tag}[/] [bold]{name}[/]  [dim]{srv['description']}[/]"
                 )
-                default_checked = (not is_inst) if install_mode else is_inst
+                default_checked = (not all_inst) if install_mode else any_inst
                 mcp_selections.append(
                     Selection(label, f"mcp:{name}", initial_state=default_checked)
                 )
                 self._item_metadata[f"mcp:{name}"] = {
                     "type": "mcp", "name": name,
                     "description": srv["description"],
-                    "installed": is_inst,
+                    "installed_any": any_inst,
+                    "installed_all": all_inst,
                     "config": json.dumps(srv["config"], indent=2),
                 }
                 self._item_scopes[f"mcp:{name}"] = "workspace" if name in WORKSPACE_SCOPE_DEFAULTS else "global"
