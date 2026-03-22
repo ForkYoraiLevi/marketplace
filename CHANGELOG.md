@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-03-22
+
+### Enable Devin CLI global rules support
+
+Devin CLI now loads `~/.config/devin/AGENTS.md` as global rules. Updated `catalog.toml` to set `global_rules = "~/.config/devin/AGENTS.md"` for the Devin platform. This removes the workspace-only forcing for Devin rules — users can now install rules globally or per-workspace, matching the behavior of Claude Code, Cursor, and Windsurf.
+
 ## 2026-03-19
 
 ### Banner K glyph fix (f5043c8)

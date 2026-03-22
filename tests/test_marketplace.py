@@ -793,11 +793,15 @@ class TestCatalogToml(unittest.TestCase):
                 with self.subTest(family=fname, rule=member):
                     self.assertIn(member, actual, f"Rule family '{fname}' references nonexistent rule: {member}")
 
-    def test_devin_has_no_global_rules(self):
-        """Devin doesn't support global rules — global_rules must be empty."""
+    def test_devin_has_global_rules(self):
+        """Devin supports global rules at ~/.config/devin/AGENTS.md."""
         cat = self._load()
         devin = cat.get("platforms", {}).get("devin", {})
-        self.assertEqual(devin.get("global_rules", ""), "", "Devin should have empty global_rules")
+        self.assertEqual(
+            devin.get("global_rules", ""),
+            "~/.config/devin/AGENTS.md",
+            "Devin should have global_rules set to ~/.config/devin/AGENTS.md",
+        )
 
 
 # --------------------------------------------------------------------------- #

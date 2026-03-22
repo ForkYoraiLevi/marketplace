@@ -109,7 +109,7 @@ marketplace/
 - Modal screens: PathPicker, Preview, Confirm (with scope breakdown), Results
 
 **Platform support:**
-- Devin CLI: skills to `~/.config/devin/skills/`, rules to AGENTS.md (global rules = None, forced workspace)
+- Devin CLI: skills to `~/.config/devin/skills/`, rules to `~/.config/devin/AGENTS.md` (global) or `AGENTS.md` (workspace)
 - Claude Code: skills to `~/.claude/skills/`, rules to CLAUDE.md
 - Cursor: skills to `.cursor/skills/`, rules to `.cursor/rules/` (YAML frontmatter)
 - Windsurf: skills to `.windsurf/skills/`, rules to `.windsurf/rules/` (YAML frontmatter)
