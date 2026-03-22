@@ -1690,6 +1690,174 @@ class TestInstallPySafety(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------- #
+# Test: Duplicate rule detection and section replacement
+# --------------------------------------------------------------------------- #
+
+
+class TestDuplicateRuleDetection(unittest.TestCase):
+    """Verify replace_rule_section and duplicate prevention logic."""
+
+    def _get_funcs(self):
+        sys.path.insert(0, str(REPO_ROOT))
+        try:
+            from install import install_rule, replace_rule_section
+            return install_rule, replace_rule_section
+        finally:
+            sys.path.pop(0)
+
+    def test_replace_middle_section(self):
+        """Replacing a section between two others preserves neighbours."""
+        install_rule, replace_rule_section = self._get_funcs()
+        original = (
+            "## First Section\n\nFirst content.\n\n"
+            "## Target Section\n\nOld content.\n- old bullet\n\n"
+            "## Third Section\n\nThird content.\n"
+        )
+        new_rule = "## Target Section\n\nNew content.\n- new bullet 1\n- new bullet 2\n"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            target.write_text(original)
+            result = replace_rule_section(target, "Target Section", new_rule)
+            self.assertEqual(result, "updated")
+            content = target.read_text()
+            self.assertIn("New content.", content)
+            self.assertIn("new bullet 2", content)
+            self.assertNotIn("Old content.", content)
+            self.assertNotIn("old bullet", content)
+            self.assertIn("## First Section", content)
+            self.assertIn("First content.", content)
+            self.assertIn("## Third Section", content)
+            self.assertIn("Third content.", content)
+
+    def test_replace_last_section(self):
+        """Replacing the last section (no following ## ) works correctly."""
+        _, replace_rule_section = self._get_funcs()
+        original = "## First\n\nKeep this.\n\n## Last\n\nOld last.\n"
+        new_rule = "## Last\n\nNew last.\n"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            target.write_text(original)
+            result = replace_rule_section(target, "Last", new_rule)
+            self.assertEqual(result, "updated")
+            content = target.read_text()
+            self.assertIn("New last.", content)
+            self.assertNotIn("Old last.", content)
+            self.assertIn("## First", content)
+            self.assertIn("Keep this.", content)
+
+    def test_replace_first_section(self):
+        """Replacing the first section preserves everything after."""
+        _, replace_rule_section = self._get_funcs()
+        original = "## First\n\nOld first.\n\n## Second\n\nKeep second.\n"
+        new_rule = "## First\n\nNew first.\n"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            target.write_text(original)
+            result = replace_rule_section(target, "First", new_rule)
+            self.assertEqual(result, "updated")
+            content = target.read_text()
+            self.assertIn("New first.", content)
+            self.assertNotIn("Old first.", content)
+            self.assertIn("## Second", content)
+            self.assertIn("Keep second.", content)
+
+    def test_replace_nonexistent_returns_not_found(self):
+        """Trying to replace a section that doesn't exist returns 'not found'."""
+        _, replace_rule_section = self._get_funcs()
+        original = "## Existing\n\nContent.\n"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            target.write_text(original)
+            result = replace_rule_section(target, "Nonexistent", "## Nonexistent\n\nNew.\n")
+            self.assertEqual(result, "not found")
+            self.assertEqual(target.read_text(), original)
+
+    def test_replace_missing_file_returns_not_found(self):
+        """replace_rule_section on a non-existent file returns 'not found'."""
+        _, replace_rule_section = self._get_funcs()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            result = replace_rule_section(target, "Title", "## Title\n\nBody.\n")
+            self.assertEqual(result, "not found")
+
+    def test_install_then_replace_roundtrip(self):
+        """install_rule detects existing, replace_rule_section updates it."""
+        install_rule, replace_rule_section = self._get_funcs()
+        if not RULES:
+            self.skipTest("No rules in marketplace")
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            # First install
+            res1 = install_rule(rule_dict, "devin", paths)
+            self.assertEqual(res1, "installed")
+            # Second install should be blocked
+            res2 = install_rule(rule_dict, "devin", paths)
+            self.assertEqual(res2, "already installed")
+            # Extract title
+            content = (rule / "rule.md").read_text()
+            title = ""
+            for line in content.splitlines():
+                if line.startswith("## "):
+                    title = line[3:].strip()
+                    break
+            self.assertTrue(title, "Rule must have a ## heading")
+            # Count title occurrences — exactly one
+            file_text = target.read_text()
+            self.assertEqual(file_text.count(f"## {title}"), 1)
+            # Replace
+            new_content = f"## {title}\n\nUpdated content for testing.\n"
+            res3 = replace_rule_section(target, title, new_content)
+            self.assertEqual(res3, "updated")
+            updated_text = target.read_text()
+            self.assertIn("Updated content for testing.", updated_text)
+            # Still exactly one occurrence of the title
+            self.assertEqual(updated_text.count(f"## {title}"), 1)
+
+    def test_duplicate_prevented_across_multiple_installs(self):
+        """Installing the same rule twice never produces two copies in the file."""
+        install_rule, replace_rule_section = self._get_funcs()
+        if not RULES:
+            self.skipTest("No rules in marketplace")
+        rule = RULES[0]
+        rule_dict = {"name": rule.name, "path": rule}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            paths = {"rules": target}
+            install_rule(rule_dict, "devin", paths)
+            install_rule(rule_dict, "devin", paths)
+            install_rule(rule_dict, "devin", paths)
+            content = (rule / "rule.md").read_text()
+            title = ""
+            for line in content.splitlines():
+                if line.startswith("## "):
+                    title = line[3:].strip()
+                    break
+            file_text = target.read_text()
+            self.assertEqual(
+                file_text.count(f"## {title}"), 1,
+                f"Title '## {title}' appears more than once after triple install",
+            )
+
+    def test_replace_preserves_subsections(self):
+        """### subsections in replacement content are kept intact."""
+        _, replace_rule_section = self._get_funcs()
+        original = "## MyRule\n\nOld stuff.\n\n## Other\n\nKeep.\n"
+        new_rule = "## MyRule\n\nNew stuff.\n\n### Sub-heading\n\nSub content.\n"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "AGENTS.md"
+            target.write_text(original)
+            replace_rule_section(target, "MyRule", new_rule)
+            content = target.read_text()
+            self.assertIn("### Sub-heading", content)
+            self.assertIn("Sub content.", content)
+            self.assertIn("## Other", content)
+            self.assertIn("Keep.", content)
+
+
+# --------------------------------------------------------------------------- #
 # Entry point
 # --------------------------------------------------------------------------- #
 

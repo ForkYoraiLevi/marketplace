@@ -287,6 +287,33 @@ def uninstall_rule(rule: dict, pid: str, paths: dict) -> str:
         return "removed"
 
 
+def replace_rule_section(target: Path, title: str, new_content: str) -> str:
+    """Replace an existing ## section in an AGENTS.md file with new content."""
+    if not target.exists():
+        return "not found"
+    file_text = target.read_text()
+    title_line = f"## {title}"
+    if title_line not in file_text:
+        return "not found"
+    lines = file_text.splitlines(keepends=True)
+    new_lines: list[str] = []
+    skipping = False
+    for line in lines:
+        if line.strip() == title_line and not skipping:
+            skipping = True
+            for nl in new_content.splitlines(keepends=True):
+                new_lines.append(nl)
+            if not new_content.endswith("\n"):
+                new_lines.append("\n")
+            continue
+        if skipping and line.startswith("## "):
+            skipping = False
+        if not skipping:
+            new_lines.append(line)
+    target.write_text("".join(new_lines))
+    return "updated"
+
+
 def install_skill(skill: dict, skills_dir: Path) -> str:
     if not skills_dir:
         return "not supported"
@@ -577,7 +604,7 @@ Footer > .footer--description {
 }
 
 /* Modal screens */
-ConfirmScreen, PreviewScreen, ResultsScreen, PathPickerScreen {
+ConfirmScreen, PreviewScreen, ResultsScreen, PathPickerScreen, DuplicateRulesScreen {
     align: center middle;
 }
 
@@ -603,6 +630,26 @@ ConfirmScreen, PreviewScreen, ResultsScreen, PathPickerScreen {
     border: heavy $success;
     background: $surface;
     padding: 1 2;
+}
+
+#duplicate-dialog {
+    width: 80%;
+    max-height: 80%;
+    border: heavy orange;
+    background: $surface;
+    padding: 1 2;
+}
+
+#duplicate-dialog #modal-title {
+    color: #ff8c00;
+}
+
+#sl-duplicates > .selection-list--button-selected {
+    color: #ff8c00;
+}
+
+#sl-duplicates:focus > .selection-list--button-highlighted {
+    background: #3d2800;
 }
 
 #path-picker-dialog {
@@ -1270,6 +1317,53 @@ def main():
 
         def action_dismiss_screen(self) -> None:
             self.dismiss()
+
+    # ── Duplicate Rules Modal ──
+    class DuplicateRulesScreen(ModalScreen[set | None]):
+        """Show rules whose ## title already exists in target and let user
+        choose which to update (overwrite) vs skip (keep existing)."""
+        BINDINGS = [Binding("escape", "cancel", "Cancel")]
+
+        def __init__(self, duplicates: list[dict]):
+            super().__init__()
+            self._duplicates = duplicates
+
+        def compose(self) -> ComposeResult:
+            with Vertical(id="duplicate-dialog"):
+                yield Static(
+                    "[bold orange1]\u2500\u2500 Duplicate Rules Found \u2500\u2500[/]",
+                    id="modal-title",
+                )
+                yield Static(
+                    "[orange1]These rules already exist in their target files.\n"
+                    "Select which ones to [bold]update[/bold] (overwrite with new version).\n"
+                    "Unselected rules will be [bold]skipped[/bold] (keeping the existing version).[/]\n",
+                )
+                selections = []
+                for dup in self._duplicates:
+                    label = Text.from_markup(
+                        f"[bold]{dup['title']}[/]  [dim]\u2192 {dup['target_path']}[/]"
+                    )
+                    sel_id = f"{dup['rule_name']}::{dup['target_path']}"
+                    selections.append(Selection(label, sel_id, initial_state=False))
+                yield MarketplaceList(*selections, id="sl-duplicates")
+                with Horizontal(id="modal-actions"):
+                    yield Button("Update Selected", variant="success",
+                                 classes="modal-btn btn-install", id="dup-update")
+                    yield Button("Skip All", variant="default",
+                                 classes="modal-btn btn-cancel", id="dup-skip")
+
+        @on(Button.Pressed, "#dup-update")
+        def _update(self, _event) -> None:
+            sl = self.query_one("#sl-duplicates", SelectionList)
+            self.dismiss(set(sl.selected))
+
+        @on(Button.Pressed, "#dup-skip")
+        def _skip(self, _event=None) -> None:
+            self.dismiss(set())
+
+        def action_cancel(self) -> None:
+            self.dismiss(None)
 
     # ── Main App ──
     class MarketplaceApp(App):
@@ -1966,6 +2060,96 @@ def main():
             selected_skills: list[str],
             ws_paths: list[str],
         ) -> None:
+            if install_mode and selected_rules:
+                duplicates = self._find_duplicates(
+                    selected_platforms, selected_rules, ws_paths,
+                )
+                if duplicates:
+                    all_dup_keys = {
+                        f"{d['rule_name']}::{d['target_path']}" for d in duplicates
+                    }
+
+                    def handle_duplicates(updates: set | None) -> None:
+                        if updates is None:
+                            return
+                        self._do_install(
+                            selected_platforms, selected_mcps,
+                            selected_rules, selected_skills,
+                            ws_paths, updates, all_dup_keys,
+                        )
+
+                    self.push_screen(
+                        DuplicateRulesScreen(duplicates),
+                        callback=handle_duplicates,
+                    )
+                    return
+
+            self._do_install(
+                selected_platforms, selected_mcps,
+                selected_rules, selected_skills,
+                ws_paths, set(), set(),
+            )
+
+        def _find_duplicates(
+            self,
+            selected_platforms: list[str],
+            selected_rules: list[str],
+            ws_paths: list[str],
+        ) -> list[dict]:
+            """Find rules whose ## title already exists in target AGENTS.md."""
+            rules_by_name = {r["name"]: r for r in all_rules}
+            duplicates: list[dict] = []
+            seen: set[str] = set()
+            for pid in selected_platforms:
+                info = PLATFORMS[pid]
+                if info["rule_fmt"] != "agents":
+                    continue
+                no_global_rules = info["global"].get("rules") is None
+                for name in selected_rules:
+                    rule = rules_by_name.get(name)
+                    if not rule:
+                        continue
+                    key = f"rule:{name}"
+                    scope = self._item_scopes.get(key, "global")
+                    effective_scope = (
+                        "workspace" if (scope == "global" and no_global_rules) else scope
+                    )
+                    content = (rule["path"] / "rule.md").read_text()
+                    title = ""
+                    for line in content.splitlines():
+                        if line.startswith("## "):
+                            title = line[3:].strip()
+                            break
+                    if not title:
+                        continue
+                    for paths, _label in self._get_install_targets(
+                        pid, effective_scope, ws_paths,
+                    ):
+                        target = paths.get("rules")
+                        if not target or not target.exists():
+                            continue
+                        dedup_key = f"{name}::{target}"
+                        if dedup_key in seen:
+                            continue
+                        seen.add(dedup_key)
+                        if title in target.read_text():
+                            duplicates.append({
+                                "rule_name": name,
+                                "title": title,
+                                "target_path": str(target),
+                            })
+            return duplicates
+
+        def _do_install(
+            self,
+            selected_platforms: list[str],
+            selected_mcps: list[str],
+            selected_rules: list[str],
+            selected_skills: list[str],
+            ws_paths: list[str],
+            updates_to_do: set[str],
+            all_dup_keys: set[str],
+        ) -> None:
             rules_by_name = {r["name"]: r for r in all_rules}
             skills_by_name = {s["name"]: s for s in all_skills}
 
@@ -2001,10 +2185,27 @@ def main():
                     effective_scope = "workspace" if (scope == "global" and no_global_rules) else scope
                     for paths, target_label in self._get_install_targets(pid, effective_scope, ws_paths):
                         if install_mode:
-                            res = install_rule(rule, pid, paths)
+                            dup_key = f"{name}::{paths.get('rules', '')}"
+                            if dup_key in updates_to_do:
+                                content = (rule["path"] / "rule.md").read_text()
+                                title = ""
+                                for line in content.splitlines():
+                                    if line.startswith("## "):
+                                        title = line[3:].strip()
+                                        break
+                                res = replace_rule_section(paths["rules"], title, content)
+                            elif dup_key in all_dup_keys:
+                                res = "skipped (kept existing)"
+                            else:
+                                res = install_rule(rule, pid, paths)
                         else:
                             res = uninstall_rule(rule, pid, paths)
-                        color = "green" if res in ("installed", "removed") else "dim"
+                        if res in ("installed", "removed", "updated"):
+                            color = "green"
+                        elif "skipped" in res:
+                            color = "yellow"
+                        else:
+                            color = "dim"
                         result_lines.append(
                             f"  [{color}]\u2502[/] {plabel:<14s} [bold]Rule[/]   {name:<24s} [{color}]{res}[/] ({target_label})"
                         )
