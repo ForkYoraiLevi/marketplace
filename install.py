@@ -1291,7 +1291,7 @@ def main():
                     f"[bold dodger_blue2]\u2500\u2500 Confirm {self._mode_label} \u2500\u2500[/]",
                     id="modal-title",
                 )
-                yield Static(self._summary, id="modal-body")
+                yield VerticalScroll(Static(self._summary), id="modal-body")
                 with Horizontal(id="modal-actions"):
                     yield Button(f"{self._mode_label}", variant="success",
                                  classes="modal-btn btn-install", id="confirm-yes")
