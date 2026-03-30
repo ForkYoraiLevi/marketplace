@@ -61,6 +61,18 @@ uv run $SKILL_DIR/scripts/query_sessions.py prompts
 uv run $SKILL_DIR/scripts/query_sessions.py prompts "terraform" -n 10
 ```
 
+### Query a bundled session database
+
+When working with an RCA context bundle (from the automated RCA pipeline),
+the bundle includes a `session_history.db` file containing the investigation
+session. Use `--db` to query it instead of the global database:
+
+```
+uv run $SKILL_DIR/scripts/query_sessions.py --db ./session_history.db list
+uv run $SKILL_DIR/scripts/query_sessions.py --db ./session_history.db search "maintenance mode"
+uv run $SKILL_DIR/scripts/query_sessions.py --db ./session_history.db read <session-id>
+```
+
 ### JSON output (all commands)
 
 ```
