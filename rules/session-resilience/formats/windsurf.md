@@ -5,12 +5,10 @@ description: "Write state to disk continuously — you don't have memory, these 
 
 ## Session Resilience
 
-You don't have memory. These files do. Everything you learn this session is lost when it ends.
+You have no memory across sessions. Files are your memory. Write state to disk continuously.
 
-- **Treat every session as your last.** Write state to disk continuously, not just at the end.
-- **HANDOFF.md is your memory.** After every meaningful change, update it with current state, what works, what's next.
-- **PITFALLS.md captures lessons.** When you fix a bug or discover non-obvious behavior, write it down: symptom, cause, fix.
+- **Before starting:** Plan in the todo list. If it's not in the list, it doesn't exist.
+- **After each step:** Mark the todo complete. Update `HANDOFF.md` if behavior changed. Commit.
+- **PITFALLS.md captures lessons.** Symptom, cause, fix — write it down when you discover non-obvious behavior.
 - **CHANGELOG.md tracks history.** One paragraph per milestone. Append-only.
-- **The todo list is your plan.** If it's not in the list, it doesn't exist. If context compacts, the list survives.
-- **Never assume the next agent has context.** Write as if someone with zero knowledge will continue your work.
-- **The question isn't "did I complete the task?"** — it's "would the next agent thank me for how I left this project?"
+- **Write as if someone with zero context will continue your work.** The question is: "would the next agent thank me for how I left this project?"

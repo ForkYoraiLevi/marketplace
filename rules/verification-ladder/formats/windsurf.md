@@ -7,12 +7,7 @@ description: "Five-layer automated testing: compile, unit, integration, perf, e2
 
 Build automated verification at multiple layers. Set up test infrastructure before feature code.
 
-### Layers
-0. **Compile** — zero warnings (`-Wall -Wextra` or equivalent)
-1. **Unit** — each function/API works correctly (PASS/FAIL/SKIP)
-2. **Integration** — multiple functions compose correctly
-3. **Performance** — baselines in machine-readable file, warn on >50% regression
-4. **End-to-end** — real application smoke test, automated
+**Layers:** compile (zero warnings) → unit → integration → performance (baseline file, warn on >50% regression) → end-to-end smoke test.
 
 ### Principles
 - Every test proves three things: correct **outcome**, correct **mechanism**, clean **side effects**.
