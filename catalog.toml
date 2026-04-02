@@ -137,7 +137,7 @@ members = ["blast-radius", "code-hygiene", "pitfalls-discipline", "prior-art", "
 [rule_families."Documentation & Progress"]
 icon = "\U0001F4DD"
 description = "Track work, document decisions, maintain project history"
-members = ["document-lifecycle", "document-progress"]
+members = ["document-lifecycle", "document-progress", "readable-docs"]
 
 [rule_families."Workflow & Process"]
 icon = "\u2699"

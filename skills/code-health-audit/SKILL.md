@@ -54,6 +54,15 @@ The script catches mechanical patterns. You must also investigate:
 
 **Architecture legibility.** Does the directory structure reflect system boundaries? Could a new developer look at top-level directories and understand what this project is? Flag things that are in surprising locations.
 
+**Documentation health.** Check whether the project's docs actually help a human get oriented:
+
+- Does `README.md` exist and is it a concise TL;DR (under ~100 lines)? Or is it a 500-line wall of text that buries the quick start?
+- Does a `docs/` directory exist? Are guides named by topic (`getting-started.md`, `deployment.md`) or by artifact (`notes.md`, `TODO.md`)?
+- **Hand-holding test**: pick the most important guide (usually getting-started or setup). Does it walk a newcomer through step by step — prerequisites, exact commands, expected output, troubleshooting? Or does it assume you already know the system? A good guide reads like a patient mentor sitting next to you. A bad guide reads like notes the author wrote for themselves.
+- Are any docs orphaned — not linked from README.md or any other doc? An unlinked doc won't be found.
+- Are docs stale? Compare documented commands, config paths, or feature descriptions against the actual code. Flag contradictions.
+- Is terminology consistent across docs? Watch for the same concept referred to by different names in different files.
+
 ## Step 4: Report findings
 
 Structure your output as:
@@ -72,6 +81,9 @@ Oversized files, mixed responsibilities — hard to navigate and review.
 Naming improvements, structural reorganizations — lower risk but improve
 developer experience.
 
+### Documentation
+README quality, missing/orphaned/stale guides, hand-holding gaps.
+
 ### CODEBASE.md status
 Missing / outdated / accurate
 ```
@@ -89,6 +101,7 @@ Convert findings into a prioritized todo list using todo_write. Order by:
 2. Missing CODEBASE.md (blocks future audits)
 3. Oversized files (hardest to navigate)
 4. Missing centralization (scattered config, magic strings)
-5. Naming improvements (lowest effort, good quick wins)
+5. Documentation gaps (missing guides, stale docs, no hand-holding for newcomers)
+6. Naming improvements (lowest effort, good quick wins)
 
 User arguments: $ARGUMENTS

@@ -172,6 +172,41 @@ def scan_directory(root: Path, max_lines: int = 300) -> dict:
 
     codebase_md = root / "CODEBASE.md"
 
+    # Documentation health checks
+    readme = root / "README.md"
+    readme_lines = 0
+    if readme.exists():
+        try:
+            readme_lines = len(readme.read_text(errors="replace").splitlines())
+        except OSError:
+            pass
+
+    docs_dir = root / "docs"
+    doc_files = []
+    orphaned_docs = []
+    if docs_dir.is_dir():
+        # Find all markdown files in docs/
+        for doc in sorted(docs_dir.rglob("*.md")):
+            rel = str(doc.relative_to(root))
+            doc_files.append(rel)
+
+        # Check which docs are linked from README or other docs
+        if readme.exists():
+            try:
+                all_doc_content = readme.read_text(errors="replace")
+            except OSError:
+                all_doc_content = ""
+            for doc in docs_dir.rglob("*.md"):
+                try:
+                    all_doc_content += "\n" + doc.read_text(errors="replace")
+                except OSError:
+                    pass
+            for rel in doc_files:
+                # Check if the file is referenced by name anywhere
+                fname = Path(rel).name
+                if fname not in all_doc_content and rel not in all_doc_content:
+                    orphaned_docs.append(rel)
+
     return {
         "duplicates": duplicates,
         "large_files": sorted(large_files, key=lambda x: -x["lines"]),
@@ -180,6 +215,11 @@ def scan_directory(root: Path, max_lines: int = 300) -> dict:
         "directory_tree": sorted(dirs_seen),
         "codebase_md_exists": codebase_md.exists(),
         "codebase_md_size": codebase_md.stat().st_size if codebase_md.exists() else 0,
+        "readme_exists": readme.exists(),
+        "readme_lines": readme_lines,
+        "docs_dir_exists": docs_dir.is_dir(),
+        "doc_files": doc_files,
+        "orphaned_docs": orphaned_docs,
     }
 
 
@@ -227,6 +267,34 @@ def print_text_report(findings: dict, root: Path) -> None:
             indent = "  " * depth
             print(f"{indent}- {Path(d).name}/")
     print()
+
+    # Documentation health
+    doc_issues = []
+    if not findings["readme_exists"]:
+        doc_issues.append("README.md: **MISSING**")
+    elif findings["readme_lines"] > 100:
+        doc_issues.append(
+            f"README.md: {findings['readme_lines']} lines — consider trimming "
+            "to a TL;DR and moving details to docs/"
+        )
+    if not findings["docs_dir_exists"]:
+        doc_issues.append("docs/ directory: **MISSING** — no detailed guides")
+    else:
+        count = len(findings["doc_files"])
+        doc_issues.append(f"docs/ directory: {count} file{'s' if count != 1 else ''}")
+    if findings["orphaned_docs"]:
+        doc_issues.append(
+            f"Orphaned docs (not linked from any other doc): "
+            f"{len(findings['orphaned_docs'])}"
+        )
+        for p in findings["orphaned_docs"]:
+            doc_issues.append(f"  - {p}")
+
+    if doc_issues:
+        print("## Documentation Health\n")
+        for issue in doc_issues:
+            print(f"- {issue}")
+        print()
 
     print("## Summary\n")
     print(f"- Duplicate definition names: {len(dupes)}")

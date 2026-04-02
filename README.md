@@ -22,6 +22,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 | [pitfalls-discipline](./rules/pitfalls-discipline/) | Read PITFALLS.md before complex work, write to it after fixing bugs |
 | [prior-art](./rules/prior-art/) | Search for existing solutions before building custom code |
 | [python-uv](./rules/python-uv/) | Use uv for all Python operations — never pip, venv, conda, or poetry |
+| [readable-docs](./rules/readable-docs/) | Write documentation for humans — TL;DR readme, hand-holding guides, consistent terminology |
 | [revert-on-failure](./rules/revert-on-failure/) | Commit before experimenting, measure after, keep improvements, revert failures |
 | [session-resilience](./rules/session-resilience/) | Write state to disk continuously — you don't have memory, these files do |
 | [simplicity-bar](./rules/simplicity-bar/) | Weigh complexity cost against improvement magnitude -- simpler is better, deletion is a win |
