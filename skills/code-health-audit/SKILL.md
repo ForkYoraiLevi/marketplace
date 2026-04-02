@@ -54,6 +54,14 @@ The script catches mechanical patterns. You must also investigate:
 
 **Architecture legibility.** Does the directory structure reflect system boundaries? Could a new developer look at top-level directories and understand what this project is? Flag things that are in surprising locations.
 
+**Config vs code boundary.** Look for data that's hardcoded in source code but should be in config files. The test: if a non-developer needs to add an entry (a new resource, a new option, a new mapping), do they edit Python/TypeScript, or do they edit YAML/JSON? Hardcoded registries, lookup tables, and feature lists that change independently of logic are prime candidates for extraction to config.
+
+**Path centralization.** Are file paths and directory names hardcoded as string literals in multiple files? Grep for repeated path strings (e.g., `"workflow_api"`, `"models/loras"`). If the same path appears in 3+ files, it should be defined once in a config module and imported. The test: could you rename a directory by editing one line?
+
+**Convention vs parallel mapping.** Look for configuration that duplicates grouping that already exists elsewhere. For example: if models already have tags in a YAML file, a separate Python dict that maps "tag -> subdirectory" is a parallel mapping that will drift. The data should derive from the existing source, not copy it.
+
+**Operational runbooks.** For every recurring task (adding a feature, registering a resource, deploying), check if there's a step-by-step guide in `docs/`. The test: could someone who has never done it complete the task by following the doc alone, without asking for help or reading source code?
+
 **Documentation health.** Check whether the project's docs actually help a human get oriented:
 
 - Does `README.md` exist and is it a concise TL;DR (under ~100 lines)? Or is it a 500-line wall of text that buries the quick start?

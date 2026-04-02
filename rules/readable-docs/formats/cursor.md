@@ -2,7 +2,6 @@
 description: "Write documentation for humans — TL;DR readme, hand-holding guides, consistent terminology"
 alwaysApply: true
 ---
-
 ## Readable Docs
 
 Write documentation for humans who don't already understand the system.
@@ -10,6 +9,7 @@ Write documentation for humans who don't already understand the system.
 - **README.md is a TL;DR.** What this project is, how to install/run it, and links to detailed docs. One screen of text. Not a tutorial, not a reference manual.
 - **Detailed guides live in `docs/`.** One topic per file, named for what it explains (`getting-started.md`, `deployment.md`), not for who wrote it or when.
 - **Hand-hold the reader.** Guides should walk a newcomer through step by step — prerequisites, exact commands, expected output, what to do if something goes wrong. Assume the reader has no prior context.
+- **Document every recurring operation.** If a task is done more than once (adding a feature, registering a resource, deploying), write a step-by-step runbook in `docs/`. The test: can someone who has never done it follow the guide without asking for help?
 - **Define terms once, use them consistently.** If the project has domain-specific concepts, define them in one place and use the same words everywhere. Don't alternate between synonyms.
 - **Docs track code.** When behavior changes, update the relevant doc in the same commit. A doc that describes yesterday's behavior is worse than no doc.
 - **Mirror code structure.** If the code has distinct modules or subsystems, the docs should explain each one. A reader should be able to go from a directory name to a doc that explains what it does.
