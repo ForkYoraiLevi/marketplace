@@ -44,32 +44,23 @@ The script detects:
 
 The script catches mechanical patterns. You must also investigate:
 
-**Scattered definitions.** For each duplicate name the script found, read the actual definitions. Are they truly the same concept defined twice? Check whether they share an import source or each define independently. Same concept in two places = critical finding.
+**Scattered definitions.** For each duplicate name the script found, read the actual definitions. Are they truly the same concept defined twice? Same concept in two places = critical finding. Also check for directory paths hardcoded as string literals in multiple files — if the same path appears in 3+ files, it should be defined once in a config module.
 
-**Hidden coupling.** Look for modules that share state through implicit means — both reading the same config file, both hardcoding the same magic string, both defining the same data shape without a shared type. These are invisible dependencies that break when one side changes.
+**Hidden coupling.** Look for modules that share state through implicit means — both reading the same config file, both hardcoding the same magic string, both defining the same data shape without a shared type. Also look for parallel mappings that duplicate grouping that already exists elsewhere (e.g., a tag→subdirectory dict that copies what tags already express). The data should derive from the existing source, not copy it.
 
 **Responsibility overload.** For each large file, read the first 30 lines (imports and initial declarations reveal scope). List what the file actually does. If it handles N concerns, suggest N files.
 
-**Naming clarity.** Beyond the generic names the script flags, scan for functions named `process`, `handle`, `do`, `run`, `get`, `set` without a qualifying noun. These names force readers to open the file to understand what it does.
+**Config vs code boundary.** Look for data hardcoded in source code that should be in config files. The test: if a non-developer needs to add an entry (a new resource, option, or mapping), do they edit Python/TypeScript, or YAML/JSON? Hardcoded registries, lookup tables, and feature lists that change independently of logic should be extracted to config.
 
-**Architecture legibility.** Does the directory structure reflect system boundaries? Could a new developer look at top-level directories and understand what this project is? Flag things that are in surprising locations.
+**Architecture legibility.** Does the directory structure reflect system boundaries? Could a new developer look at top-level directories and understand what this project is? Are file and function names self-describing, or do they force readers to open the implementation?
 
-**Config vs code boundary.** Look for data that's hardcoded in source code but should be in config files. The test: if a non-developer needs to add an entry (a new resource, a new option, a new mapping), do they edit Python/TypeScript, or do they edit YAML/JSON? Hardcoded registries, lookup tables, and feature lists that change independently of logic are prime candidates for extraction to config.
-
-**Path centralization.** Are file paths and directory names hardcoded as string literals in multiple files? Grep for repeated path strings (e.g., `"workflow_api"`, `"models/loras"`). If the same path appears in 3+ files, it should be defined once in a config module and imported. The test: could you rename a directory by editing one line?
-
-**Convention vs parallel mapping.** Look for configuration that duplicates grouping that already exists elsewhere. For example: if models already have tags in a YAML file, a separate Python dict that maps "tag -> subdirectory" is a parallel mapping that will drift. The data should derive from the existing source, not copy it.
-
-**Operational runbooks.** For every recurring task (adding a feature, registering a resource, deploying), check if there's a step-by-step guide in `docs/`. The test: could someone who has never done it complete the task by following the doc alone, without asking for help or reading source code?
-
-**Documentation health.** Check whether the project's docs actually help a human get oriented:
+**Documentation health.** Check whether docs help a human get oriented and operate the system:
 
 - Does `README.md` exist and is it a concise TL;DR (under ~100 lines)? Or is it a 500-line wall of text that buries the quick start?
 - Does a `docs/` directory exist? Are guides named by topic (`getting-started.md`, `deployment.md`) or by artifact (`notes.md`, `TODO.md`)?
-- **Hand-holding test**: pick the most important guide (usually getting-started or setup). Does it walk a newcomer through step by step — prerequisites, exact commands, expected output, troubleshooting? Or does it assume you already know the system? A good guide reads like a patient mentor sitting next to you. A bad guide reads like notes the author wrote for themselves.
-- Are any docs orphaned — not linked from README.md or any other doc? An unlinked doc won't be found.
-- Are docs stale? Compare documented commands, config paths, or feature descriptions against the actual code. Flag contradictions.
-- Is terminology consistent across docs? Watch for the same concept referred to by different names in different files.
+- **Hand-holding test**: pick the most important guide. Does it walk a newcomer through step by step — prerequisites, exact commands, expected output, troubleshooting? A good guide reads like a patient mentor. A bad guide reads like notes the author wrote for themselves.
+- **Operational runbooks**: for every recurring task (adding a feature, registering a resource, deploying), is there a step-by-step guide? Can someone who has never done it complete the task by following the doc alone?
+- Are any docs orphaned (not linked from README or other docs)? Are docs stale (documented commands don't match actual code)? Is terminology consistent?
 
 ## Step 4: Report findings
 
