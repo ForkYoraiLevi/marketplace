@@ -12,6 +12,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 |------|-------------|
 | [autonomous-persistence](./rules/autonomous-persistence/) | Never ask permission to continue -- keep working autonomously until done or explicitly stopped |
 | [blast-radius](./rules/blast-radius/) | Scope changes by blast radius — prefer small atomic edits over large risky rewrites |
+| [code-hygiene](./rules/code-hygiene/) | Enforce DRY, single-responsibility, centralized definitions, and human-readable naming |
 | [continuous-improvement](./rules/continuous-improvement/) | Structured seven-phase workflow for finding, planning, and implementing codebase improvements |
 | [document-lifecycle](./rules/document-lifecycle/) | Three-tier documentation: rules, reference, history — no sprawl |
 | [document-progress](./rules/document-progress/) | Write progress to disk using todo lists and HANDOFF.md so nothing is lost between sessions |
@@ -36,6 +37,7 @@ A curated collection of reusable agent skills and rules. Each item is a self-con
 |-------|-------------|
 | [act-runner](./skills/act-runner/) | Run GitHub Actions workflows locally with act and podman |
 | [check](./skills/check/) | Mid-session course correction — stop, review rules, and realign |
+| [code-health-audit](./skills/code-health-audit/) | Audit codebase for DRY violations, oversized files, and scattered definitions |
 | [duckduckgo-search](./skills/duckduckgo-search/) | Search DuckDuckGo and return results as structured text |
 | [expose-port](./skills/expose-port/) | Expose a local port via HTTPS (localhost.run) or TCP (bore) |
 | [gemini-chat](./skills/gemini-chat/) | Interactive multi-turn chat with Google Gemini |
